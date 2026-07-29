@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meeting Room Booking</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="layout">
+      <header class="header">
+        <div class="header__inner">
+          <h1 class="header__title">Meeting Room Booking</h1>
+          <p class="header__subtitle">Бронювання переговорних кімнат</p>
+        </div>
+      </header>
+
+      <main class="main">
+        <div class="main__inner">
+          <section class="hero">
+            <h2 class="hero__title">Ласкаво просимо</h2>
+            <p class="hero__text">
+              Веб-застосунок для перегляду розкладу переговорних та бронювання вільних
+              слотів. Інтерфейс і логіка будуть додані на наступних етапах.
+            </p>
+
+            <div class="info-card">
+              <p class="info-card__label">Backend URL</p>
+              <p class="info-card__value" id="backend-url">—</p>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <div class="footer__inner">
+          <p>Meeting Room Booking · UA-Skills event2</p>
+        </div>
+      </footer>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+      document.getElementById('backend-url').textContent = API_BASE_URL;
+    </script>
+  </body>
+</html>
