@@ -50,15 +50,31 @@ This project implements a small office meeting-room booking system where staff c
 
 ```
 meeting-room-booking/
-├── frontend/     # React/Next.js client application
-├── backend/      # API server (NestJS or Express)
+├── client/                 # React/Next.js frontend
+│   ├── public/             # Static assets
+│   └── src/
+│       ├── components/     # UI components
+│       ├── pages/          # Route-level views
+│       ├── hooks/          # Reusable React hooks
+│       ├── services/       # API client layer
+│       ├── types/          # Shared TypeScript types
+│       └── utils/          # Frontend helpers
+├── server/                 # NestJS/Express backend
+│   ├── src/
+│   │   ├── modules/        # Feature modules / routes
+│   │   ├── services/       # Business logic
+│   │   ├── models/         # Data models / entities
+│   │   ├── middleware/     # Auth, validation, etc.
+│   │   ├── config/         # App configuration
+│   │   └── utils/          # Backend helpers
+│   └── tests/              # Unit & integration tests
 ├── README.md
 └── .gitignore
 ```
 
 ## Status
 
-Initial repository setup. Application functionality is not yet implemented.
+Basic project structure is in place. Application functionality is not yet implemented.
 
 ## License
 
