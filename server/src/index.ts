@@ -1,8 +1,10 @@
 import { createApp } from './app';
 import { closeDatabase, connectDatabase, verifyDatabaseConnection } from './config/database';
 import { env } from './config/env';
+import { initializeSchema } from './models';
 
 connectDatabase();
+initializeSchema();
 
 if (!verifyDatabaseConnection()) {
   console.error('Failed to connect to the database');
