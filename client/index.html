@@ -29,6 +29,86 @@
             </div>
           </section>
 
+          <section class="data-section booking-form-section" aria-labelledby="booking-form-heading">
+            <h2 id="booking-form-heading">New booking</h2>
+            <p id="booking-form-status" class="data-section__status" hidden></p>
+
+            <form id="booking-form" class="booking-form">
+              <div class="booking-form__field">
+                <label for="booking-room">Room</label>
+                <select id="booking-room" name="roomId" required>
+                  <option value="">Select a room</option>
+                </select>
+              </div>
+
+              <div class="booking-form__field">
+                <label for="booking-user-id">User ID</label>
+                <input
+                  id="booking-user-id"
+                  name="userId"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value="1"
+                  required
+                />
+              </div>
+
+              <div class="booking-form__field">
+                <label for="booking-title">Title</label>
+                <input
+                  id="booking-title"
+                  name="title"
+                  type="text"
+                  maxlength="100"
+                  placeholder="Meeting title"
+                  required
+                />
+              </div>
+
+              <div class="booking-form__field">
+                <label for="booking-date">Date</label>
+                <input id="booking-date" name="date" type="date" required />
+              </div>
+
+              <div class="booking-form__row">
+                <div class="booking-form__field">
+                  <label for="booking-start-time">Start time</label>
+                  <input
+                    id="booking-start-time"
+                    name="startTime"
+                    type="time"
+                    step="1800"
+                    min="09:00"
+                    max="18:30"
+                    required
+                  />
+                </div>
+
+                <div class="booking-form__field">
+                  <label for="booking-end-time">End time</label>
+                  <input
+                    id="booking-end-time"
+                    name="endTime"
+                    type="time"
+                    step="1800"
+                    min="09:30"
+                    max="19:00"
+                    required
+                  />
+                </div>
+              </div>
+
+              <p class="booking-form__hint">
+                Office hours: 09:00–19:00 (Europe/Kyiv). Use 30-minute time slots.
+              </p>
+
+              <button type="submit" id="booking-submit" class="booking-form__submit">
+                Create booking
+              </button>
+            </form>
+          </section>
+
           <section class="data-section" aria-labelledby="rooms-heading">
             <h2 id="rooms-heading">Rooms</h2>
             <p id="rooms-status" class="data-section__status">Loading rooms…</p>

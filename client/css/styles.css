@@ -133,3 +133,59 @@ body {
 .data-section li + li {
   margin-top: 0.35rem;
 }
+
+.booking-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 32rem;
+}
+
+.booking-form__row {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.booking-form__field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.booking-form__field label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.booking-form__field input,
+.booking-form__field select {
+  font: inherit;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+.booking-form__submit {
+  font: inherit;
+  width: fit-content;
+  padding: 0.65rem 1.1rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.booking-form__submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.booking-form__submit:not(:disabled):hover {
+  filter: brightness(0.95);
+}
+
+.booking-form__hint {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
