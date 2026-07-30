@@ -1,5 +1,6 @@
 import cors from 'cors';
 import express from 'express';
+import { errorHandler, jsonParseErrorHandler, notFoundHandler } from './middleware/error-handler';
 import { apiRouter } from './modules';
 
 export function createApp() {
@@ -10,9 +11,9 @@ export function createApp() {
 
   app.use('/api', apiRouter);
 
-  app.use((_req, res) => {
-    res.status(404).json({ message: 'Not found' });
-  });
+  app.use(notFoundHandler);
+  app.use(jsonParseErrorHandler);
+  app.use(errorHandler);
 
   return app;
 }

@@ -9,8 +9,13 @@ import { createBooking, getAllBookings } from '../../services/bookings.service';
 export const bookingsRouter = Router();
 
 bookingsRouter.get('/', (_req, res) => {
-  const bookings = getAllBookings();
-  res.json(bookings);
+  try {
+    const bookings = getAllBookings();
+    res.json(bookings);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to load bookings' });
+  }
 });
 
 bookingsRouter.post('/', (req, res) => {
@@ -33,6 +38,7 @@ bookingsRouter.post('/', (req, res) => {
       return;
     }
 
+    console.error(error);
     res.status(500).json({ message: 'Failed to create booking' });
   }
 });

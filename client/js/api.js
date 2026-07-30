@@ -1,32 +1,49 @@
 async function apiRequest(path, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  });
+  let response;
+
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    });
+  } catch (error) {
+    throw new ApiError(
+      'Unable to reach the server. Make sure the backend is running.',
+      0,
+      error,
+    );
+  }
+
+  let body = null;
+
+  if (response.status !== 204) {
+    const rawBody = await response.text();
+
+    if (rawBody) {
+      try {
+        body = JSON.parse(rawBody);
+      } catch {
+        if (response.ok) {
+          throw new ApiError('Received an invalid response from the server.', response.status);
+        }
+
+        throw new ApiError(getDefaultMessageForStatus(response.status), response.status);
+      }
+    }
+  }
 
   if (!response.ok) {
-    let message = `Request failed (${response.status})`;
+    const message =
+      (body && typeof body.message === 'string' && body.message) ||
+      getDefaultMessageForStatus(response.status);
 
-    try {
-      const body = await response.json();
-      if (body.message) {
-        message = body.message;
-      }
-    } catch {
-      // Response body is not JSON.
-    }
-
-    throw new Error(message);
+    throw new ApiError(message, response.status);
   }
 
-  if (response.status === 204) {
-    return null;
-  }
-
-  return response.json();
+  return body;
 }
 
 function fetchRooms() {

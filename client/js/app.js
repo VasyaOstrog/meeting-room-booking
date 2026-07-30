@@ -61,6 +61,14 @@ function showBookingFormErrors(errors) {
   }
 }
 
+function ensureArray(value, label) {
+  if (!Array.isArray(value)) {
+    throw new ApiError(`Received an invalid ${label} list from the server.`, 500);
+  }
+
+  return value;
+}
+
 function renderRooms(rooms) {
   const list = document.getElementById('rooms-list');
 
@@ -143,39 +151,52 @@ function populateRoomSelect(rooms) {
 }
 
 async function refreshBookings() {
-  const bookings = await fetchBookings();
-  renderBookings(bookings);
+  try {
+    const bookings = ensureArray(await fetchBookings(), 'bookings');
+    renderBookings(bookings);
+    setStatus('bookings-status', '');
+  } catch (error) {
+    setStatus('bookings-status', getErrorMessage(error), true);
+    throw error;
+  }
+}
+
+async function loadRooms() {
+  try {
+    const rooms = ensureArray(await fetchRooms(), 'rooms');
+
+    cachedRooms = rooms;
+    roomNamesById = Object.fromEntries(rooms.map((room) => [room.id, room.name]));
+
+    renderRooms(rooms);
+    populateRoomSelect(rooms);
+    setStatus('rooms-status', '');
+  } catch (error) {
+    cachedRooms = [];
+    roomNamesById = {};
+
+    renderRooms([]);
+    populateRoomSelect([]);
+    setStatus('rooms-status', getErrorMessage(error), true);
+  }
+}
+
+async function loadBookingsList() {
+  try {
+    const bookings = ensureArray(await fetchBookings(), 'bookings');
+    renderBookings(bookings);
+    setStatus('bookings-status', '');
+  } catch (error) {
+    renderBookings([]);
+    setStatus('bookings-status', getErrorMessage(error), true);
+  }
 }
 
 async function loadData() {
   setStatus('rooms-status', 'Loading rooms…');
   setStatus('bookings-status', 'Loading bookings…');
 
-  try {
-    const [rooms, bookings] = await Promise.all([fetchRooms(), fetchBookings()]);
-
-    cachedRooms = rooms;
-    roomNamesById = Object.fromEntries(rooms.map((room) => [room.id, room.name]));
-
-    renderRooms(rooms);
-    renderBookings(bookings);
-    populateRoomSelect(rooms);
-
-    setStatus('rooms-status', '');
-    setStatus('bookings-status', '');
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to load data';
-
-    cachedRooms = [];
-    roomNamesById = {};
-
-    renderRooms([]);
-    renderBookings([]);
-    populateRoomSelect([]);
-
-    setStatus('rooms-status', message, true);
-    setStatus('bookings-status', message, true);
-  }
+  await Promise.all([loadRooms(), loadBookingsList()]);
 }
 
 function initializeBookingFormDefaults() {
@@ -233,10 +254,18 @@ function setupBookingForm() {
       form.reset();
       populateRoomSelect(cachedRooms);
       initializeBookingFormDefaults();
-      await refreshBookings();
+
+      try {
+        await refreshBookings();
+      } catch {
+        setStatus(
+          'booking-form-status',
+          'Booking created, but the bookings list could not be refreshed.',
+          true,
+        );
+      }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to create booking';
-      setStatus('booking-form-status', message, true);
+      setStatus('booking-form-status', getErrorMessage(error), true);
     } finally {
       submitButton.disabled = false;
     }
@@ -274,5 +303,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setupBookingForm();
   initializeBookingFormDefaults();
-  loadData();
+  loadData().catch((error) => {
+    console.error(error);
+  });
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+  event.preventDefault();
 });
