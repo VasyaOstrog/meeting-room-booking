@@ -11,6 +11,15 @@ function formatDateTime(value) {
   return date.toLocaleString();
 }
 
+const BOOKING_FIELD_IDS = {
+  roomId: 'booking-room',
+  userId: 'booking-user-id',
+  title: 'booking-title',
+  date: 'booking-date',
+  startTime: 'booking-start-time',
+  endTime: 'booking-end-time',
+};
+
 function setStatus(elementId, message, isError = false) {
   const element = document.getElementById(elementId);
 
@@ -23,14 +32,33 @@ function setStatus(elementId, message, isError = false) {
   element.dataset.state = isError ? 'error' : 'info';
 }
 
-function combineDateAndTimeToIso(dateValue, timeValue) {
-  const localDate = new Date(`${dateValue}T${timeValue}`);
+function setFieldError(fieldName, message) {
+  const inputId = BOOKING_FIELD_IDS[fieldName];
+  const input = inputId ? document.getElementById(inputId) : null;
+  const errorElement = document.getElementById(`${inputId}-error`);
 
-  if (Number.isNaN(localDate.getTime())) {
-    throw new Error('Invalid date or time');
+  if (input) {
+    input.setAttribute('aria-invalid', message ? 'true' : 'false');
   }
 
-  return localDate.toISOString();
+  if (errorElement) {
+    errorElement.textContent = message;
+    errorElement.hidden = message === '';
+  }
+}
+
+function clearBookingFormErrors() {
+  for (const fieldName of Object.keys(BOOKING_FIELD_IDS)) {
+    setFieldError(fieldName, '');
+  }
+}
+
+function showBookingFormErrors(errors) {
+  clearBookingFormErrors();
+
+  for (const [fieldName, message] of Object.entries(errors)) {
+    setFieldError(fieldName, message);
+  }
 }
 
 function renderRooms(rooms) {
@@ -175,32 +203,23 @@ function setupBookingForm() {
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    clearBookingFormErrors();
 
-    const formData = new FormData(form);
-    const roomId = Number(formData.get('roomId'));
-    const userId = Number(formData.get('userId'));
-    const title = String(formData.get('title') ?? '').trim();
-    const date = String(formData.get('date') ?? '');
-    const startTime = String(formData.get('startTime') ?? '');
-    const endTime = String(formData.get('endTime') ?? '');
+    const values = readBookingFormValues(form);
+    const validation = validateBookingForm(values);
 
-    if (!roomId || !userId || !title || !date || !startTime || !endTime) {
-      setStatus('booking-form-status', 'Please fill in all fields.', true);
+    if (!validation.valid) {
+      showBookingFormErrors(validation.errors);
+      setStatus('booking-form-status', validation.summary, true);
       return;
     }
 
     let payload;
 
     try {
-      payload = {
-        roomId,
-        userId,
-        title,
-        startTime: combineDateAndTimeToIso(date, startTime),
-        endTime: combineDateAndTimeToIso(date, endTime),
-      };
+      payload = buildBookingPayload(values);
     } catch {
-      setStatus('booking-form-status', 'Invalid date or time.', true);
+      setStatus('booking-form-status', 'Please check the date and time values.', true);
       return;
     }
 
@@ -209,9 +228,11 @@ function setupBookingForm() {
 
     try {
       await createBooking(payload);
+      clearBookingFormErrors();
       setStatus('booking-form-status', 'Booking created successfully.');
       form.reset();
       populateRoomSelect(cachedRooms);
+      initializeBookingFormDefaults();
       await refreshBookings();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to create booking';
@@ -220,6 +241,28 @@ function setupBookingForm() {
       submitButton.disabled = false;
     }
   });
+
+  for (const inputId of Object.values(BOOKING_FIELD_IDS)) {
+    const input = document.getElementById(inputId);
+
+    if (!input) {
+      continue;
+    }
+
+    input.addEventListener('input', clearFieldError);
+    input.addEventListener('change', clearFieldError);
+  }
+
+  function clearFieldError(event) {
+    const inputId = event.target.id;
+    const fieldName = Object.entries(BOOKING_FIELD_IDS).find(([, id]) => id === inputId)?.[0];
+
+    if (fieldName) {
+      setFieldError(fieldName, '');
+    }
+
+    setStatus('booking-form-status', '');
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

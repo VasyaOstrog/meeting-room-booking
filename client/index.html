@@ -36,9 +36,10 @@
             <form id="booking-form" class="booking-form">
               <div class="booking-form__field">
                 <label for="booking-room">Room</label>
-                <select id="booking-room" name="roomId" required>
+                <select id="booking-room" name="roomId" required aria-describedby="booking-room-error">
                   <option value="">Select a room</option>
                 </select>
+                <p id="booking-room-error" class="booking-form__error" hidden></p>
               </div>
 
               <div class="booking-form__field">
@@ -51,7 +52,9 @@
                   step="1"
                   value="1"
                   required
+                  aria-describedby="booking-user-id-error"
                 />
+                <p id="booking-user-id-error" class="booking-form__error" hidden></p>
               </div>
 
               <div class="booking-form__field">
@@ -63,12 +66,15 @@
                   maxlength="100"
                   placeholder="Meeting title"
                   required
+                  aria-describedby="booking-title-error"
                 />
+                <p id="booking-title-error" class="booking-form__error" hidden></p>
               </div>
 
               <div class="booking-form__field">
                 <label for="booking-date">Date</label>
-                <input id="booking-date" name="date" type="date" required />
+                <input id="booking-date" name="date" type="date" required aria-describedby="booking-date-error" />
+                <p id="booking-date-error" class="booking-form__error" hidden></p>
               </div>
 
               <div class="booking-form__row">
@@ -82,7 +88,9 @@
                     min="09:00"
                     max="18:30"
                     required
+                    aria-describedby="booking-start-time-error"
                   />
+                  <p id="booking-start-time-error" class="booking-form__error" hidden></p>
                 </div>
 
                 <div class="booking-form__field">
@@ -95,7 +103,9 @@
                     min="09:30"
                     max="19:00"
                     required
+                    aria-describedby="booking-end-time-error"
                   />
+                  <p id="booking-end-time-error" class="booking-form__error" hidden></p>
                 </div>
               </div>
 
@@ -132,6 +142,7 @@
 
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
+    <script src="js/booking-validation.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

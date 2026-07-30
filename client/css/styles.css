@@ -189,3 +189,13 @@ body {
   color: var(--color-muted);
   font-size: 0.9rem;
 }
+
+.booking-form__error {
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.booking-form__field input[aria-invalid='true'],
+.booking-form__field select[aria-invalid='true'] {
+  border-color: #b91c1c;
+}
