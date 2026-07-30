@@ -18,16 +18,27 @@
       <main class="main">
         <div class="main__inner">
           <section class="hero">
-            <h2 class="hero__title">Ласкаво просимо</h2>
+            <h2 class="hero__title">Розклад переговорних</h2>
             <p class="hero__text">
-              Веб-застосунок для перегляду розкладу переговорних та бронювання вільних
-              слотів. Інтерфейс і логіка будуть додані на наступних етапах.
+              Дані завантажуються з backend API. Нижче — список кімнат і поточні бронювання.
             </p>
 
             <div class="info-card">
               <p class="info-card__label">Backend URL</p>
               <p class="info-card__value" id="backend-url">—</p>
             </div>
+          </section>
+
+          <section class="data-section" aria-labelledby="rooms-heading">
+            <h2 id="rooms-heading">Rooms</h2>
+            <p id="rooms-status" class="data-section__status">Loading rooms…</p>
+            <ul id="rooms-list"></ul>
+          </section>
+
+          <section class="data-section" aria-labelledby="bookings-heading">
+            <h2 id="bookings-heading">Bookings</h2>
+            <p id="bookings-status" class="data-section__status">Loading bookings…</p>
+            <ul id="bookings-list"></ul>
           </section>
         </div>
       </main>
@@ -40,8 +51,7 @@
     </div>
 
     <script src="js/config.js"></script>
-    <script>
-      document.getElementById('backend-url').textContent = API_BASE_URL;
-    </script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
   </body>
 </html>

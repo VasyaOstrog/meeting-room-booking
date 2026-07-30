@@ -107,3 +107,29 @@ body {
   color: var(--color-muted);
   font-size: 0.9rem;
 }
+
+.data-section {
+  margin-top: 2rem;
+}
+
+.data-section h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.data-section__status {
+  color: var(--color-muted);
+  margin-bottom: 0.75rem;
+}
+
+.data-section__status[data-state='error'] {
+  color: #b91c1c;
+}
+
+.data-section ul {
+  padding-left: 1.25rem;
+}
+
+.data-section li + li {
+  margin-top: 0.35rem;
+}
