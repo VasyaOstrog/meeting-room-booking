@@ -10,126 +10,151 @@
     <div class="layout">
       <header class="header">
         <div class="header__inner">
-          <h1 class="header__title">Meeting Room Booking</h1>
-          <p class="header__subtitle">Бронювання переговорних кімнат</p>
+          <div class="header__brand">
+            <h1 class="header__title">Meeting Room Booking</h1>
+            <p class="header__subtitle">Бронювання переговорних кімнат</p>
+          </div>
+          <p class="header__meta">
+            API: <span id="backend-url">—</span>
+          </p>
         </div>
       </header>
 
       <main class="main">
         <div class="main__inner">
-          <section class="hero">
-            <h2 class="hero__title">Розклад переговорних</h2>
-            <p class="hero__text">
-              Дані завантажуються з backend API. Нижче — список кімнат і поточні бронювання.
+          <section class="intro">
+            <h2 class="intro__title">Розклад переговорних</h2>
+            <p class="intro__text">
+              Оберіть кімнату, вкажіть час і створіть бронювання. Актуальний список бронювань
+              оновлюється автоматично після збереження.
             </p>
+          </section>
 
-            <div class="info-card">
-              <p class="info-card__label">Backend URL</p>
-              <p class="info-card__value" id="backend-url">—</p>
+          <div class="page-grid">
+            <section class="panel booking-form-section" aria-labelledby="booking-form-heading">
+              <div class="panel__header">
+                <h2 id="booking-form-heading" class="panel__title">New booking</h2>
+                <p class="panel__subtitle">Fill in the details below</p>
+              </div>
+
+              <div
+                id="booking-form-status"
+                class="feedback-message"
+                role="status"
+                aria-live="polite"
+                hidden
+              ></div>
+
+              <form id="booking-form" class="booking-form">
+                <div class="booking-form__field">
+                  <label for="booking-room">Room</label>
+                  <select id="booking-room" name="roomId" required aria-describedby="booking-room-error">
+                    <option value="">Select a room</option>
+                  </select>
+                  <p id="booking-room-error" class="booking-form__error" hidden></p>
+                </div>
+
+                <div class="booking-form__field">
+                  <label for="booking-user-id">User ID</label>
+                  <input
+                    id="booking-user-id"
+                    name="userId"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value="1"
+                    required
+                    aria-describedby="booking-user-id-error"
+                  />
+                  <p id="booking-user-id-error" class="booking-form__error" hidden></p>
+                </div>
+
+                <div class="booking-form__field">
+                  <label for="booking-title">Title</label>
+                  <input
+                    id="booking-title"
+                    name="title"
+                    type="text"
+                    maxlength="100"
+                    placeholder="Team standup, client call…"
+                    required
+                    aria-describedby="booking-title-error"
+                  />
+                  <p id="booking-title-error" class="booking-form__error" hidden></p>
+                </div>
+
+                <div class="booking-form__field">
+                  <label for="booking-date">Date</label>
+                  <input id="booking-date" name="date" type="date" required aria-describedby="booking-date-error" />
+                  <p id="booking-date-error" class="booking-form__error" hidden></p>
+                </div>
+
+                <div class="booking-form__row">
+                  <div class="booking-form__field">
+                    <label for="booking-start-time">Start time</label>
+                    <input
+                      id="booking-start-time"
+                      name="startTime"
+                      type="time"
+                      step="1800"
+                      min="09:00"
+                      max="18:30"
+                      required
+                      aria-describedby="booking-start-time-error"
+                    />
+                    <p id="booking-start-time-error" class="booking-form__error" hidden></p>
+                  </div>
+
+                  <div class="booking-form__field">
+                    <label for="booking-end-time">End time</label>
+                    <input
+                      id="booking-end-time"
+                      name="endTime"
+                      type="time"
+                      step="1800"
+                      min="09:30"
+                      max="19:00"
+                      required
+                      aria-describedby="booking-end-time-error"
+                    />
+                    <p id="booking-end-time-error" class="booking-form__error" hidden></p>
+                  </div>
+                </div>
+
+                <p class="booking-form__hint">
+                  Office hours: 09:00–19:00 (Europe/Kyiv). Use 30-minute time slots.
+                </p>
+
+                <button type="submit" id="booking-submit" class="button button--primary">
+                  <span class="button__label">Create booking</span>
+                  <span class="button__spinner" aria-hidden="true" hidden></span>
+                </button>
+              </form>
+            </section>
+
+            <div class="page-grid__sidebar">
+              <section class="panel" aria-labelledby="rooms-heading">
+                <div class="panel__header">
+                  <h2 id="rooms-heading" class="panel__title">Rooms</h2>
+                  <p id="rooms-status" class="panel__status" data-state="loading">Loading rooms…</p>
+                </div>
+                <ul id="rooms-list" class="card-list"></ul>
+              </section>
+
+              <section class="panel" aria-labelledby="bookings-heading">
+                <div class="panel__header panel__header--split">
+                  <div>
+                    <h2 id="bookings-heading" class="panel__title">Bookings</h2>
+                    <p id="bookings-status" class="panel__status" data-state="loading">Loading bookings…</p>
+                  </div>
+                  <button type="button" id="refresh-bookings" class="button button--secondary">
+                    Refresh
+                  </button>
+                </div>
+                <ul id="bookings-list" class="card-list"></ul>
+              </section>
             </div>
-          </section>
-
-          <section class="data-section booking-form-section" aria-labelledby="booking-form-heading">
-            <h2 id="booking-form-heading">New booking</h2>
-            <p id="booking-form-status" class="data-section__status" hidden></p>
-
-            <form id="booking-form" class="booking-form">
-              <div class="booking-form__field">
-                <label for="booking-room">Room</label>
-                <select id="booking-room" name="roomId" required aria-describedby="booking-room-error">
-                  <option value="">Select a room</option>
-                </select>
-                <p id="booking-room-error" class="booking-form__error" hidden></p>
-              </div>
-
-              <div class="booking-form__field">
-                <label for="booking-user-id">User ID</label>
-                <input
-                  id="booking-user-id"
-                  name="userId"
-                  type="number"
-                  min="1"
-                  step="1"
-                  value="1"
-                  required
-                  aria-describedby="booking-user-id-error"
-                />
-                <p id="booking-user-id-error" class="booking-form__error" hidden></p>
-              </div>
-
-              <div class="booking-form__field">
-                <label for="booking-title">Title</label>
-                <input
-                  id="booking-title"
-                  name="title"
-                  type="text"
-                  maxlength="100"
-                  placeholder="Meeting title"
-                  required
-                  aria-describedby="booking-title-error"
-                />
-                <p id="booking-title-error" class="booking-form__error" hidden></p>
-              </div>
-
-              <div class="booking-form__field">
-                <label for="booking-date">Date</label>
-                <input id="booking-date" name="date" type="date" required aria-describedby="booking-date-error" />
-                <p id="booking-date-error" class="booking-form__error" hidden></p>
-              </div>
-
-              <div class="booking-form__row">
-                <div class="booking-form__field">
-                  <label for="booking-start-time">Start time</label>
-                  <input
-                    id="booking-start-time"
-                    name="startTime"
-                    type="time"
-                    step="1800"
-                    min="09:00"
-                    max="18:30"
-                    required
-                    aria-describedby="booking-start-time-error"
-                  />
-                  <p id="booking-start-time-error" class="booking-form__error" hidden></p>
-                </div>
-
-                <div class="booking-form__field">
-                  <label for="booking-end-time">End time</label>
-                  <input
-                    id="booking-end-time"
-                    name="endTime"
-                    type="time"
-                    step="1800"
-                    min="09:30"
-                    max="19:00"
-                    required
-                    aria-describedby="booking-end-time-error"
-                  />
-                  <p id="booking-end-time-error" class="booking-form__error" hidden></p>
-                </div>
-              </div>
-
-              <p class="booking-form__hint">
-                Office hours: 09:00–19:00 (Europe/Kyiv). Use 30-minute time slots.
-              </p>
-
-              <button type="submit" id="booking-submit" class="booking-form__submit">
-                Create booking
-              </button>
-            </form>
-          </section>
-
-          <section class="data-section" aria-labelledby="rooms-heading">
-            <h2 id="rooms-heading">Rooms</h2>
-            <p id="rooms-status" class="data-section__status">Loading rooms…</p>
-            <ul id="rooms-list"></ul>
-          </section>
-
-          <section class="data-section" aria-labelledby="bookings-heading">
-            <h2 id="bookings-heading">Bookings</h2>
-            <p id="bookings-status" class="data-section__status">Loading bookings…</p>
-            <ul id="bookings-list"></ul>
-          </section>
+          </div>
         </div>
       </main>
 

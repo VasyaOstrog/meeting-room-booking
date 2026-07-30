@@ -1,5 +1,6 @@
 let cachedRooms = [];
 let roomNamesById = {};
+let feedbackTimeoutId = null;
 
 function formatDateTime(value) {
   const date = new Date(value);
@@ -8,7 +9,10 @@ function formatDateTime(value) {
     return value;
   }
 
-  return date.toLocaleString();
+  return date.toLocaleString(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
 }
 
 const BOOKING_FIELD_IDS = {
@@ -20,7 +24,7 @@ const BOOKING_FIELD_IDS = {
   endTime: 'booking-end-time',
 };
 
-function setStatus(elementId, message, isError = false) {
+function setStatus(elementId, message, state = '') {
   const element = document.getElementById(elementId);
 
   if (!element) {
@@ -29,7 +33,50 @@ function setStatus(elementId, message, isError = false) {
 
   element.textContent = message;
   element.hidden = message === '';
-  element.dataset.state = isError ? 'error' : 'info';
+  element.dataset.state = state;
+
+  if (elementId === 'booking-form-status' && feedbackTimeoutId) {
+    clearTimeout(feedbackTimeoutId);
+    feedbackTimeoutId = null;
+  }
+
+  if (elementId === 'booking-form-status' && state === 'success') {
+    feedbackTimeoutId = window.setTimeout(() => {
+      setStatus('booking-form-status', '');
+    }, 5000);
+  }
+}
+
+function setPanelStatus(elementId, message, state = '') {
+  const element = document.getElementById(elementId);
+
+  if (!element) {
+    return;
+  }
+
+  element.textContent = message;
+  element.dataset.state = state;
+  element.hidden = false;
+}
+
+function setSubmitLoading(isLoading) {
+  const submitButton = document.getElementById('booking-submit');
+  const spinner = submitButton?.querySelector('.button__spinner');
+  const label = submitButton?.querySelector('.button__label');
+
+  if (!submitButton) {
+    return;
+  }
+
+  submitButton.disabled = isLoading;
+
+  if (spinner) {
+    spinner.hidden = !isLoading;
+  }
+
+  if (label) {
+    label.textContent = isLoading ? 'Creating…' : 'Create booking';
+  }
 }
 
 function setFieldError(fieldName, message) {
@@ -69,6 +116,15 @@ function ensureArray(value, label) {
   return value;
 }
 
+function renderEmptyState(list, message) {
+  list.replaceChildren();
+
+  const item = document.createElement('li');
+  item.className = 'empty-state';
+  item.textContent = message;
+  list.appendChild(item);
+}
+
 function renderRooms(rooms) {
   const list = document.getElementById('rooms-list');
 
@@ -79,15 +135,35 @@ function renderRooms(rooms) {
   list.replaceChildren();
 
   if (rooms.length === 0) {
-    const item = document.createElement('li');
-    item.textContent = 'No rooms available.';
-    list.appendChild(item);
+    renderEmptyState(list, 'No rooms available yet.');
     return;
   }
 
   for (const room of rooms) {
     const item = document.createElement('li');
-    item.textContent = `${room.name} — Floor ${room.floor}, capacity ${room.capacity}`;
+    item.className = 'card';
+
+    const title = document.createElement('p');
+    title.className = 'card__title';
+    title.textContent = room.name;
+
+    const meta = document.createElement('p');
+    meta.className = 'card__meta';
+    meta.textContent = `Capacity: ${room.capacity} people`;
+
+    const row = document.createElement('div');
+    row.className = 'card__row';
+
+    const floorBadge = document.createElement('span');
+    floorBadge.className = 'badge badge--floor';
+    floorBadge.textContent = `Floor ${room.floor}`;
+
+    const capacityBadge = document.createElement('span');
+    capacityBadge.className = 'badge badge--capacity';
+    capacityBadge.textContent = `${room.capacity} seats`;
+
+    row.append(floorBadge, capacityBadge);
+    item.append(title, meta, row);
     list.appendChild(item);
   }
 }
@@ -102,20 +178,32 @@ function renderBookings(bookings) {
   list.replaceChildren();
 
   if (bookings.length === 0) {
-    const item = document.createElement('li');
-    item.textContent = 'No bookings yet.';
-    list.appendChild(item);
+    renderEmptyState(list, 'No bookings yet. Create one using the form.');
     return;
   }
 
   for (const booking of bookings) {
     const item = document.createElement('li');
+    item.className = 'card';
+
+    const title = document.createElement('p');
+    title.className = 'card__title';
+    title.textContent = booking.title;
+
     const roomName = roomNamesById[booking.roomId] ?? `Room #${booking.roomId}`;
-    const status = booking.cancelledAt ? ' (cancelled)' : '';
+    const meta = document.createElement('p');
+    meta.className = 'card__meta';
+    meta.textContent = `${roomName} · ${formatDateTime(booking.startTime)} – ${formatDateTime(booking.endTime)}`;
 
-    item.textContent =
-      `${booking.title} — ${roomName}, ${formatDateTime(booking.startTime)} to ${formatDateTime(booking.endTime)}${status}`;
+    const row = document.createElement('div');
+    row.className = 'card__row';
 
+    const statusBadge = document.createElement('span');
+    statusBadge.className = booking.cancelledAt ? 'badge badge--cancelled' : 'badge badge--active';
+    statusBadge.textContent = booking.cancelledAt ? 'Cancelled' : 'Active';
+
+    row.appendChild(statusBadge);
+    item.append(title, meta, row);
     list.appendChild(item);
   }
 }
@@ -151,17 +239,32 @@ function populateRoomSelect(rooms) {
 }
 
 async function refreshBookings() {
+  const refreshButton = document.getElementById('refresh-bookings');
+
+  if (refreshButton) {
+    refreshButton.disabled = true;
+  }
+
+  setPanelStatus('bookings-status', 'Refreshing bookings…', 'loading');
+
   try {
     const bookings = ensureArray(await fetchBookings(), 'bookings');
     renderBookings(bookings);
-    setStatus('bookings-status', '');
+    setPanelStatus('bookings-status', `${bookings.length} booking(s) loaded`, 'success');
   } catch (error) {
-    setStatus('bookings-status', getErrorMessage(error), true);
+    renderBookings([]);
+    setPanelStatus('bookings-status', getErrorMessage(error), 'error');
     throw error;
+  } finally {
+    if (refreshButton) {
+      refreshButton.disabled = false;
+    }
   }
 }
 
 async function loadRooms() {
+  setPanelStatus('rooms-status', 'Loading rooms…', 'loading');
+
   try {
     const rooms = ensureArray(await fetchRooms(), 'rooms');
 
@@ -170,32 +273,31 @@ async function loadRooms() {
 
     renderRooms(rooms);
     populateRoomSelect(rooms);
-    setStatus('rooms-status', '');
+    setPanelStatus('rooms-status', `${rooms.length} room(s) available`, 'success');
   } catch (error) {
     cachedRooms = [];
     roomNamesById = {};
 
     renderRooms([]);
     populateRoomSelect([]);
-    setStatus('rooms-status', getErrorMessage(error), true);
+    setPanelStatus('rooms-status', getErrorMessage(error), 'error');
   }
 }
 
 async function loadBookingsList() {
+  setPanelStatus('bookings-status', 'Loading bookings…', 'loading');
+
   try {
     const bookings = ensureArray(await fetchBookings(), 'bookings');
     renderBookings(bookings);
-    setStatus('bookings-status', '');
+    setPanelStatus('bookings-status', `${bookings.length} booking(s) loaded`, 'success');
   } catch (error) {
     renderBookings([]);
-    setStatus('bookings-status', getErrorMessage(error), true);
+    setPanelStatus('bookings-status', getErrorMessage(error), 'error');
   }
 }
 
 async function loadData() {
-  setStatus('rooms-status', 'Loading rooms…');
-  setStatus('bookings-status', 'Loading bookings…');
-
   await Promise.all([loadRooms(), loadBookingsList()]);
 }
 
@@ -214,11 +316,24 @@ function initializeBookingFormDefaults() {
   dateInput.min = `${year}-${month}-${day}`;
 }
 
+function setupRefreshButton() {
+  const refreshButton = document.getElementById('refresh-bookings');
+
+  if (!refreshButton) {
+    return;
+  }
+
+  refreshButton.addEventListener('click', () => {
+    refreshBookings().catch((error) => {
+      console.error(error);
+    });
+  });
+}
+
 function setupBookingForm() {
   const form = document.getElementById('booking-form');
-  const submitButton = document.getElementById('booking-submit');
 
-  if (!form || !submitButton) {
+  if (!form) {
     return;
   }
 
@@ -231,7 +346,7 @@ function setupBookingForm() {
 
     if (!validation.valid) {
       showBookingFormErrors(validation.errors);
-      setStatus('booking-form-status', validation.summary, true);
+      setStatus('booking-form-status', validation.summary, 'error');
       return;
     }
 
@@ -240,17 +355,17 @@ function setupBookingForm() {
     try {
       payload = buildBookingPayload(values);
     } catch {
-      setStatus('booking-form-status', 'Please check the date and time values.', true);
+      setStatus('booking-form-status', 'Please check the date and time values.', 'error');
       return;
     }
 
-    submitButton.disabled = true;
-    setStatus('booking-form-status', 'Creating booking…');
+    setSubmitLoading(true);
+    setStatus('booking-form-status', 'Creating booking…', 'loading');
 
     try {
       await createBooking(payload);
       clearBookingFormErrors();
-      setStatus('booking-form-status', 'Booking created successfully.');
+      setStatus('booking-form-status', 'Booking created successfully.', 'success');
       form.reset();
       populateRoomSelect(cachedRooms);
       initializeBookingFormDefaults();
@@ -261,13 +376,13 @@ function setupBookingForm() {
         setStatus(
           'booking-form-status',
           'Booking created, but the bookings list could not be refreshed.',
-          true,
+          'error',
         );
       }
     } catch (error) {
-      setStatus('booking-form-status', getErrorMessage(error), true);
+      setStatus('booking-form-status', getErrorMessage(error), 'error');
     } finally {
-      submitButton.disabled = false;
+      setSubmitLoading(false);
     }
   });
 
@@ -302,6 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   setupBookingForm();
+  setupRefreshButton();
   initializeBookingFormDefaults();
   loadData().catch((error) => {
     console.error(error);
