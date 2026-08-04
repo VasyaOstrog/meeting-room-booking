@@ -1,12 +1,19 @@
+function getStoredAuthToken() {
+  return window.localStorage.getItem('meeting-room-booking-token');
+}
+
 async function apiRequest(path, options = {}) {
   let response;
+  const token = getStoredAuthToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers,
+  };
 
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
+      headers,
       ...options,
     });
   } catch (error) {
@@ -54,9 +61,56 @@ function fetchBookings() {
   return apiRequest('/bookings');
 }
 
+function fetchBookingById(bookingId) {
+  return apiRequest(`/bookings/${bookingId}`);
+}
+
 function createBooking(payload) {
   return apiRequest('/bookings', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
+}
+
+function updateBooking(bookingId, payload) {
+  return apiRequest(`/bookings/${bookingId}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+function cancelBooking(bookingId, reason) {
+  return apiRequest(`/bookings/${bookingId}/cancel`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
+}
+
+function login(payload) {
+  return apiRequest('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+function register(payload) {
+  return apiRequest('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+function fetchCurrentUser() {
+  return apiRequest('/auth/me');
+}
+
+function createRoom(payload) {
+  return apiRequest('/rooms', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+function fetchMyBookings() {
+  return apiRequest('/bookings/my');
 }

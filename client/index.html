@@ -3,164 +3,614 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Meeting Room Booking</title>
-    <link rel="stylesheet" href="css/styles.css" />
+    <title>CYBERSPACE Booking System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/production.css" />
   </head>
   <body>
     <div class="layout">
+      <!-- Layout: sticky top navigation -->
+      <nav id="navbar" class="main-nav" aria-label="Main navigation"></nav>
+
       <header class="header">
         <div class="header__inner">
           <div class="header__brand">
             <h1 class="header__title">Meeting Room Booking</h1>
-            <p class="header__subtitle">Бронювання переговорних кімнат</p>
           </div>
-          <p class="header__meta">
-            API: <span id="backend-url">—</span>
-          </p>
         </div>
       </header>
 
       <main class="main">
         <div class="main__inner">
-          <section class="intro">
-            <h2 class="intro__title">Розклад переговорних</h2>
-            <p class="intro__text">
-              Оберіть кімнату, вкажіть час і створіть бронювання. Актуальний список бронювань
-              оновлюється автоматично після збереження.
-            </p>
-          </section>
-
-          <div class="page-grid">
-            <section class="panel booking-form-section" aria-labelledby="booking-form-heading">
-              <div class="panel__header">
-                <h2 id="booking-form-heading" class="panel__title">New booking</h2>
-                <p class="panel__subtitle">Fill in the details below</p>
-              </div>
-
-              <div
-                id="booking-form-status"
-                class="feedback-message"
-                role="status"
-                aria-live="polite"
-                hidden
-              ></div>
-
-              <form id="booking-form" class="booking-form">
-                <div class="booking-form__field">
-                  <label for="booking-room">Room</label>
-                  <select id="booking-room" name="roomId" required aria-describedby="booking-room-error">
-                    <option value="">Select a room</option>
-                  </select>
-                  <p id="booking-room-error" class="booking-form__error" hidden></p>
-                </div>
-
-                <div class="booking-form__field">
-                  <label for="booking-user-id">User ID</label>
-                  <input
-                    id="booking-user-id"
-                    name="userId"
-                    type="number"
-                    min="1"
-                    step="1"
-                    value="1"
-                    required
-                    aria-describedby="booking-user-id-error"
-                  />
-                  <p id="booking-user-id-error" class="booking-form__error" hidden></p>
-                </div>
-
-                <div class="booking-form__field">
-                  <label for="booking-title">Title</label>
-                  <input
-                    id="booking-title"
-                    name="title"
-                    type="text"
-                    maxlength="100"
-                    placeholder="Team standup, client call…"
-                    required
-                    aria-describedby="booking-title-error"
-                  />
-                  <p id="booking-title-error" class="booking-form__error" hidden></p>
-                </div>
-
-                <div class="booking-form__field">
-                  <label for="booking-date">Date</label>
-                  <input id="booking-date" name="date" type="date" required aria-describedby="booking-date-error" />
-                  <p id="booking-date-error" class="booking-form__error" hidden></p>
-                </div>
-
-                <div class="booking-form__row">
-                  <div class="booking-form__field">
-                    <label for="booking-start-time">Start time</label>
-                    <input
-                      id="booking-start-time"
-                      name="startTime"
-                      type="time"
-                      step="1800"
-                      min="09:00"
-                      max="18:30"
-                      required
-                      aria-describedby="booking-start-time-error"
-                    />
-                    <p id="booking-start-time-error" class="booking-form__error" hidden></p>
-                  </div>
-
-                  <div class="booking-form__field">
-                    <label for="booking-end-time">End time</label>
-                    <input
-                      id="booking-end-time"
-                      name="endTime"
-                      type="time"
-                      step="1800"
-                      min="09:30"
-                      max="19:00"
-                      required
-                      aria-describedby="booking-end-time-error"
-                    />
-                    <p id="booking-end-time-error" class="booking-form__error" hidden></p>
-                  </div>
-                </div>
-
-                <p class="booking-form__hint">
-                  Office hours: 09:00–19:00 (Europe/Kyiv). Use 30-minute time slots.
-                </p>
-
-                <button type="submit" id="booking-submit" class="button button--primary">
-                  <span class="button__label">Create booking</span>
-                  <span class="button__spinner" aria-hidden="true" hidden></span>
-                </button>
-              </form>
+          <!-- PAGE: Schedule -->
+          <section id="page-schedule" class="page-page" data-page="schedule">
+            <section class="intro">
+              <h2 class="intro__title">Розклад переговорних</h2>
+              <p class="intro__text">
+                Оберіть кімнату, вкажіть час і створіть бронювання. Актуальний список
+                бронювань оновлюється автоматично після збереження.
+              </p>
             </section>
 
-            <div class="page-grid__sidebar">
-              <section class="panel" aria-labelledby="rooms-heading">
+            <div class="page-grid">
+              <section
+                id="booking-panel"
+                class="panel booking-form-section"
+                aria-labelledby="booking-form-heading"
+              >
                 <div class="panel__header">
-                  <h2 id="rooms-heading" class="panel__title">Rooms</h2>
-                  <p id="rooms-status" class="panel__status" data-state="loading">Loading rooms…</p>
+                  <h2 id="booking-form-heading" class="panel__title">Нове бронювання</h2>
+                  <p class="panel__subtitle">Заповніть деталі нижче</p>
                 </div>
-                <ul id="rooms-list" class="card-list"></ul>
+
+                <div
+                  id="booking-auth-warning"
+                  class="feedback-message"
+                  data-state="info"
+                  role="status"
+                  hidden
+                >
+                  Будь ласка, увійдіть, щоб створити бронювання.
+                </div>
+
+                <div
+                  id="booking-form-status"
+                  class="feedback-message"
+                  role="status"
+                  aria-live="polite"
+                  hidden
+                ></div>
+
+                <form id="booking-form" class="booking-form">
+                  <div class="booking-form__field">
+                    <label for="booking-room">Кімната</label>
+                    <select
+                      id="booking-room"
+                      name="roomId"
+                      required
+                      aria-describedby="booking-room-error"
+                    >
+                      <option value="">Оберіть кімнату</option>
+                    </select>
+                    <p id="booking-room-error" class="booking-form__error" hidden></p>
+                  </div>
+
+                  <div class="booking-form__field">
+                    <label for="booking-title">Назва</label>
+                    <input
+                      id="booking-title"
+                      name="title"
+                      type="text"
+                      maxlength="100"
+                      placeholder="Командна нарада, дзвінок з клієнтом…"
+                      required
+                      aria-describedby="booking-title-error"
+                    />
+                    <p id="booking-title-error" class="booking-form__error" hidden></p>
+                  </div>
+
+                  <div class="booking-form__field">
+                    <label for="booking-date">Дата</label>
+                    <input
+                      id="booking-date"
+                      name="date"
+                      type="date"
+                      required
+                      aria-describedby="booking-date-error"
+                    />
+                    <p id="booking-date-error" class="booking-form__error" hidden></p>
+                  </div>
+
+                  <div class="booking-form__row">
+                    <div class="booking-form__field">
+                      <label for="booking-start-time">Час початку</label>
+                      <input
+                        id="booking-start-time"
+                        name="startTime"
+                        type="time"
+                        step="1800"
+                        min="09:00"
+                        max="18:30"
+                        required
+                        aria-describedby="booking-start-time-error"
+                      />
+                      <p id="booking-start-time-error" class="booking-form__error" hidden></p>
+                    </div>
+
+                    <div class="booking-form__field">
+                      <label for="booking-end-time">Час закінчення</label>
+                      <input
+                        id="booking-end-time"
+                        name="endTime"
+                        type="time"
+                        step="1800"
+                        min="09:30"
+                        max="19:00"
+                        required
+                        aria-describedby="booking-end-time-error"
+                      />
+                      <p id="booking-end-time-error" class="booking-form__error" hidden></p>
+                    </div>
+                  </div>
+
+                  <p class="booking-form__hint">
+                    Робочі години: 09:00–19:00 (Європа/Київ). Використовуйте 30-хвилинні інтервали.
+                  </p>
+
+                  <button type="submit" id="booking-submit" class="button button--primary">
+                    <span class="button__label">Створити бронювання</span>
+                    <span class="button__spinner" aria-hidden="true" hidden></span>
+                  </button>
+                </form>
               </section>
 
-              <section class="panel" aria-labelledby="bookings-heading">
-                <div class="panel__header panel__header--split">
-                  <div>
-                    <h2 id="bookings-heading" class="panel__title">Bookings</h2>
-                    <p id="bookings-status" class="panel__status" data-state="loading">Loading bookings…</p>
+              <section
+                id="admin-panel"
+                class="panel hidden"
+                aria-labelledby="admin-heading"
+              >
+                <div class="panel__header">
+                  <h2 id="admin-heading" class="panel__title">Додати нову кімнату</h2>
+                  <p class="panel__subtitle">Створіть нову переговорну</p>
+                </div>
+
+                <div
+                  id="admin-status"
+                  class="feedback-message"
+                  role="status"
+                  aria-live="polite"
+                  hidden
+                ></div>
+
+                <form id="admin-room-form" class="booking-form">
+                  <div class="booking-form__field">
+                    <label for="admin-room-name">Назва кімнати</label>
+                    <input
+                      id="admin-room-name"
+                      name="name"
+                      type="text"
+                      maxlength="100"
+                      placeholder="Конференц-зал А"
+                      required
+                    />
                   </div>
-                  <button type="button" id="refresh-bookings" class="button button--secondary">
-                    Refresh
+
+                  <div class="booking-form__field">
+                    <label for="admin-room-floor">Поверх</label>
+                    <input
+                      id="admin-room-floor"
+                      name="floor"
+                      type="number"
+                      min="1"
+                      max="50"
+                      value="1"
+                      required
+                    />
+                  </div>
+
+                  <div class="booking-form__field">
+                    <label for="admin-room-capacity">Місткість</label>
+                    <input
+                      id="admin-room-capacity"
+                      name="capacity"
+                      type="number"
+                      min="1"
+                      max="100"
+                      value="10"
+                      required
+                    />
+                  </div>
+
+                  <button type="button" id="admin-room-submit" class="button button--primary">
+                    Створити кімнату
+                  </button>
+                </form>
+              </section>
+
+              <div class="page-grid__sidebar">
+                <section class="panel" aria-labelledby="rooms-heading">
+                  <div class="panel__header">
+                    <h2 id="rooms-heading" class="panel__title">Кімнати</h2>
+                    <p id="rooms-status" class="panel__status" data-state="loading">
+                      Завантаження кімнат…
+                    </p>
+                  </div>
+                  <ul id="rooms-list" class="card-list"></ul>
+                </section>
+
+                <section class="panel" aria-labelledby="bookings-heading">
+                  <div class="panel__header panel__header--split">
+                    <div>
+                      <h2 id="bookings-heading" class="panel__title">Бронювання</h2>
+                      <p id="bookings-status" class="panel__status" data-state="loading">
+                        Завантаження бронювань…
+                      </p>
+                    </div>
+                    <button type="button" id="refresh-bookings" class="button button--secondary">
+                      Оновити
+                    </button>
+                  </div>
+                  <ul id="bookings-list" class="card-list"></ul>
+                </section>
+              </div>
+            </div>
+          </section>
+
+          <!-- PAGE: Login -->
+          <section id="page-login" class="page-page" data-page="login" hidden>
+            <div class="panel auth-panel">
+              <div class="panel__header">
+                <h2 class="panel__title">Вхід</h2>
+                <p class="panel__subtitle">Увійдіть до свого облікового запису</p>
+              </div>
+              <div id="login-error" class="feedback-message" role="alert" hidden></div>
+              <form id="login-form" class="booking-form">
+                <div class="booking-form__field">
+                  <label for="login-email">Електронна пошта</label>
+                  <input id="login-email" name="email" type="email" autocomplete="email" required />
+                </div>
+                <div class="booking-form__field">
+                  <label for="login-password">Пароль</label>
+                  <input
+                    id="login-password"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                  />
+                </div>
+                <button type="button" id="login-submit" class="button button--primary">
+                  Увійти
+                </button>
+                <p class="auth-switch">
+                  Немає облікового запису?
+                  <a href="#/register" id="show-register" data-route="/register">Зареєструватися</a>
+                </p>
+              </form>
+            </div>
+          </section>
+
+          <!-- PAGE: Register -->
+          <section id="page-register" class="page-page" data-page="register" hidden>
+            <div class="panel auth-panel">
+              <div class="panel__header">
+                <h2 class="panel__title">Реєстрація</h2>
+                <p class="panel__subtitle">Створіть новий обліковий запис</p>
+              </div>
+              <div id="register-error" class="feedback-message" role="alert" hidden></div>
+              <form id="register-form" class="booking-form">
+                <div class="booking-form__field">
+                  <label for="register-name">Ім'я</label>
+                  <input
+                    id="register-name"
+                    name="name"
+                    type="text"
+                    autocomplete="name"
+                    required
+                  />
+                </div>
+                <div class="booking-form__field">
+                  <label for="register-email">Електронна пошта</label>
+                  <input
+                    id="register-email"
+                    name="email"
+                    type="email"
+                    autocomplete="email"
+                    required
+                  />
+                </div>
+                <div class="booking-form__field">
+                  <label for="register-password">Пароль</label>
+                  <input
+                    id="register-password"
+                    name="password"
+                    type="password"
+                    autocomplete="new-password"
+                    required
+                  />
+                </div>
+                <button type="button" id="register-submit" class="button button--primary">
+                  Зареєструватися
+                </button>
+                <p class="auth-switch">
+                  Вже є обліковий запис?
+                  <a href="#/login" id="show-login" data-route="/login">Увійти</a>
+                </p>
+              </form>
+            </div>
+          </section>
+
+          <!-- PAGE: My Bookings -->
+          <section id="page-my-bookings" class="page-page" data-page="my-bookings" hidden>
+            <section class="intro">
+              <h2 class="intro__title">Бронювання</h2>
+              <p class="intro__text">Переглядайте та керуйте своїми бронюваннями переговорних.</p>
+            </section>
+
+            <div class="panel">
+              <div class="panel__header panel__header--split">
+                <div>
+                  <h2 class="panel__title">Ваші бронювання</h2>
+                  <p id="my-bookings-status" class="panel__status" data-state="">
+                    Завантажте свої бронювання
+                  </p>
+                </div>
+                <button type="button" id="refresh-my-bookings" class="button button--secondary">
+                  Оновити
+                </button>
+              </div>
+              <ul id="my-bookings-list" class="card-list"></ul>
+            </div>
+          </section>
+
+          <!-- PAGE: Profile -->
+          <section id="page-profile" class="page-page" data-page="profile" hidden>
+            <section class="intro">
+              <h2 class="intro__title">Налаштування профілю</h2>
+              <p class="intro__text">Керуйте інформацією облікового запису та налаштуваннями безпеки.</p>
+            </section>
+
+            <div class="page-grid">
+              <!-- Personal Information -->
+              <div class="panel">
+                <div class="panel__header">
+                  <h2 class="panel__title">Особиста інформація</h2>
+                  <p class="panel__subtitle">Оновіть деталі свого профілю</p>
+                </div>
+
+                <div id="profile-message"></div>
+
+                <form id="update-profile-form" class="booking-form">
+                  <div class="booking-form__field">
+                    <label for="profile-username">Ім'я користувача</label>
+                    <input
+                      type="text"
+                      id="profile-username"
+                      name="username"
+                      placeholder="Ваше ім'я користувача"
+                      required
+                    />
+                  </div>
+
+                  <div class="booking-form__field">
+                    <label for="profile-email">Електронна пошта</label>
+                    <input
+                      type="email"
+                      id="profile-email"
+                      name="email"
+                      placeholder="ваша.пошта@example.com"
+                      required
+                    />
+                  </div>
+
+                  <button type="submit" id="update-profile-btn" class="button button--primary">
+                    <span>Оновити профіль</span>
+                  </button>
+                </form>
+              </div>
+
+              <div class="page-grid__sidebar">
+                <!-- Change Password -->
+                <div class="panel">
+                  <div class="panel__header">
+                    <h2 class="panel__title">Зміна пароля</h2>
+                    <p class="panel__subtitle">Оновіть свій пароль</p>
+                  </div>
+
+                  <div id="password-message"></div>
+
+                  <form id="change-password-form" class="booking-form">
+                    <div class="booking-form__field">
+                      <label for="current-password">Поточний пароль</label>
+                      <input
+                        type="password"
+                        id="current-password"
+                        name="currentPassword"
+                        placeholder="Введіть поточний пароль"
+                        required
+                      />
+                    </div>
+
+                    <div class="booking-form__field">
+                      <label for="new-password">Новий пароль</label>
+                      <input
+                        type="password"
+                        id="new-password"
+                        name="newPassword"
+                        placeholder="Введіть новий пароль"
+                        required
+                      />
+                    </div>
+
+                    <div class="booking-form__field">
+                      <label for="confirm-password">Підтвердіть новий пароль</label>
+                      <input
+                        type="password"
+                        id="confirm-password"
+                        name="confirmPassword"
+                        placeholder="Підтвердіть новий пароль"
+                        required
+                      />
+                    </div>
+
+                    <button type="submit" id="change-password-btn" class="button button--primary">
+                      <span>Змінити пароль</span>
+                    </button>
+                  </form>
+                </div>
+
+                <!-- Delete Account -->
+                <div class="panel">
+                  <div class="panel__header">
+                    <h2 class="panel__title">Небезпечна зона</h2>
+                    <p class="panel__subtitle">Назавжди видаліть свій обліковий запис</p>
+                  </div>
+
+                  <div id="delete-message"></div>
+
+                  <p style="color: var(--color-text-secondary); font-size: 0.9375rem; margin-bottom: 1rem;">
+                    Після видалення облікового запису повернення неможливе. Усі ваші бронювання будуть скасовані, а дані назавжди видалені.
+                  </p>
+
+                  <button type="button" id="delete-account-btn" class="button button--secondary" style="background: var(--color-error); border-color: var(--color-error); color: white;">
+                    <span>Видалити обліковий запис</span>
                   </button>
                 </div>
-                <ul id="bookings-list" class="card-list"></ul>
-              </section>
+              </div>
             </div>
-          </div>
+          </section>
+
+          <!-- PAGE: Calendar -->
+          <section id="page-calendar" class="page-page" data-page="calendar" hidden>
+            <section class="intro">
+              <h2 class="intro__title">Календар бронювань</h2>
+              <p class="intro__text">Візуальний огляд усіх бронювань переговорних кімнат.</p>
+            </section>
+
+            <div id="calendar-view" class="calendar">
+              <div id="calendar-header"></div>
+              <div id="calendar-content"></div>
+            </div>
+          </section>
         </div>
       </main>
 
+      <!-- CYBERPUNK MODALS -->
+
+      <!-- Cancel Booking Modal -->
+      <div id="cancel-modal" class="modal-overlay" hidden>
+        <div class="modal">
+          <div class="modal__header">
+            <h2 class="modal__title">Скасувати бронювання</h2>
+            <p class="modal__subtitle">Ви впевнені, що хочете скасувати це бронювання?</p>
+          </div>
+
+          <div class="booking-form">
+            <div class="booking-form__field">
+              <label for="cancel-reason">Причина скасування (необов'язково)</label>
+              <input
+                id="cancel-reason"
+                type="text"
+                placeholder="Зустріч перенесена, кімната не потрібна..."
+                maxlength="200"
+              />
+            </div>
+          </div>
+
+          <div id="cancel-modal-status" class="feedback-message" role="alert" hidden></div>
+
+          <div class="modal__actions">
+            <button type="button" id="cancel-modal-cancel" class="button button--secondary">
+              Залишити бронювання
+            </button>
+            <button type="button" id="cancel-modal-confirm" class="button button--danger">
+              Підтвердити скасування
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Booking Modal -->
+      <div id="edit-modal" class="modal-overlay" hidden>
+        <div class="modal" style="max-width: 600px;">
+          <div class="modal__header">
+            <h2 class="modal__title">Редагувати бронювання</h2>
+            <p class="modal__subtitle">Оновіть деталі свого бронювання</p>
+          </div>
+
+          <form id="edit-booking-form" class="booking-form">
+            <div class="booking-form__field">
+              <label for="edit-room">Кімната</label>
+              <select id="edit-room" name="roomId" required>
+                <option value="">Оберіть кімнату</option>
+              </select>
+            </div>
+
+            <div class="booking-form__field">
+              <label for="edit-title">Назва</label>
+              <input
+                id="edit-title"
+                name="title"
+                type="text"
+                maxlength="100"
+                placeholder="Назва зустрічі..."
+                required
+              />
+            </div>
+
+            <div class="booking-form__field">
+              <label for="edit-date">Дата</label>
+              <input id="edit-date" name="date" type="date" required />
+            </div>
+
+            <div class="booking-form__row">
+              <div class="booking-form__field">
+                <label for="edit-start-time">Час початку</label>
+                <input
+                  id="edit-start-time"
+                  name="startTime"
+                  type="time"
+                  step="1800"
+                  required
+                />
+              </div>
+
+              <div class="booking-form__field">
+                <label for="edit-end-time">Час закінчення</label>
+                <input
+                  id="edit-end-time"
+                  name="endTime"
+                  type="time"
+                  step="1800"
+                  required
+                />
+              </div>
+            </div>
+
+            <div id="edit-modal-status" class="feedback-message" role="alert" hidden></div>
+
+            <div class="modal__actions">
+              <button type="button" id="edit-modal-cancel" class="button button--secondary">
+                Скасувати
+              </button>
+              <button type="submit" class="button button--primary">
+                Зберегти зміни
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Booking Details Modal -->
+      <div id="details-modal" class="modal-overlay" hidden>
+        <div class="modal">
+          <div class="modal__header">
+            <h2 class="modal__title">Деталі бронювання</h2>
+          </div>
+
+          <div id="details-content" class="booking-details">
+            <!-- Content populated by JS -->
+          </div>
+
+          <div class="modal__actions">
+            <button type="button" id="details-modal-close" class="button button--secondary">
+              Закрити
+            </button>
+            <button type="button" id="details-modal-edit" class="button button--primary">
+              Редагувати
+            </button>
+            <button type="button" id="details-modal-cancel" class="button button--danger">
+              Скасувати бронювання
+            </button>
+          </div>
+        </div>
+      </div>
+
       <footer class="footer">
         <div class="footer__inner">
-          <p>Meeting Room Booking · UA-Skills event2</p>
+          <p>CYBERSPACE Booking System · 2026</p>
         </div>
       </footer>
     </div>
@@ -169,6 +619,12 @@
     <script src="js/errors.js"></script>
     <script src="js/api.js"></script>
     <script src="js/booking-validation.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/navbar.js"></script>
+    <script src="js/layout.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/modals.js"></script>
+    <script src="js/profile.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

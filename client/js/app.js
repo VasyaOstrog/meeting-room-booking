@@ -1,6 +1,7 @@
 let cachedRooms = [];
 let roomNamesById = {};
 let feedbackTimeoutId = null;
+let currentUser = null;
 
 function formatDateTime(value) {
   const date = new Date(value);
@@ -17,7 +18,6 @@ function formatDateTime(value) {
 
 const BOOKING_FIELD_IDS = {
   roomId: 'booking-room',
-  userId: 'booking-user-id',
   title: 'booking-title',
   date: 'booking-date',
   startTime: 'booking-start-time',
@@ -75,7 +75,7 @@ function setSubmitLoading(isLoading) {
   }
 
   if (label) {
-    label.textContent = isLoading ? 'Creating…' : 'Create booking';
+    label.textContent = isLoading ? 'Створення…' : 'Створити бронювання';
   }
 }
 
@@ -116,6 +116,10 @@ function ensureArray(value, label) {
   return value;
 }
 
+function getUser() {
+  return currentUser;
+}
+
 function renderEmptyState(list, message) {
   list.replaceChildren();
 
@@ -135,7 +139,7 @@ function renderRooms(rooms) {
   list.replaceChildren();
 
   if (rooms.length === 0) {
-    renderEmptyState(list, 'No rooms available yet.');
+    renderEmptyState(list, 'Кімнати ще не доступні.');
     return;
   }
 
@@ -149,18 +153,18 @@ function renderRooms(rooms) {
 
     const meta = document.createElement('p');
     meta.className = 'card__meta';
-    meta.textContent = `Capacity: ${room.capacity} people`;
+    meta.textContent = `Місткість: ${room.capacity} осіб`;
 
     const row = document.createElement('div');
     row.className = 'card__row';
 
     const floorBadge = document.createElement('span');
     floorBadge.className = 'badge badge--floor';
-    floorBadge.textContent = `Floor ${room.floor}`;
+    floorBadge.textContent = `Поверх ${room.floor}`;
 
     const capacityBadge = document.createElement('span');
     capacityBadge.className = 'badge badge--capacity';
-    capacityBadge.textContent = `${room.capacity} seats`;
+    capacityBadge.textContent = `${room.capacity} місць`;
 
     row.append(floorBadge, capacityBadge);
     item.append(title, meta, row);
@@ -178,7 +182,7 @@ function renderBookings(bookings) {
   list.replaceChildren();
 
   if (bookings.length === 0) {
-    renderEmptyState(list, 'No bookings yet. Create one using the form.');
+    renderEmptyState(list, 'Бронювань ще немає. Створіть його за допомогою форми.');
     return;
   }
 
@@ -200,12 +204,260 @@ function renderBookings(bookings) {
 
     const statusBadge = document.createElement('span');
     statusBadge.className = booking.cancelledAt ? 'badge badge--cancelled' : 'badge badge--active';
-    statusBadge.textContent = booking.cancelledAt ? 'Cancelled' : 'Active';
+    statusBadge.textContent = booking.cancelledAt ? 'Скасовано' : 'Активне';
 
     row.appendChild(statusBadge);
     item.append(title, meta, row);
     list.appendChild(item);
   }
+}
+
+function renderMyBookings(bookings) {
+  const list = document.getElementById('my-bookings-list');
+
+  if (!list) {
+    return;
+  }
+
+  list.replaceChildren();
+
+  if (bookings.length === 0) {
+    renderEmptyState(list, 'У вас ще немає бронювань.');
+    return;
+  }
+
+  for (const booking of bookings) {
+    const item = document.createElement('li');
+    item.className = booking.cancelledAt ? 'card card--cancelled' : 'card';
+
+    const title = document.createElement('p');
+    title.className = 'card__title';
+    title.textContent = booking.title;
+
+    const roomName = roomNamesById[booking.roomId] ?? `Room #${booking.roomId}`;
+    const meta = document.createElement('p');
+    meta.className = 'card__meta';
+    meta.textContent = `${roomName} · ${formatDateTime(booking.startTime)} – ${formatDateTime(booking.endTime)}`;
+
+    const row = document.createElement('div');
+    row.className = 'card__row';
+
+    const statusBadge = document.createElement('span');
+    statusBadge.className = booking.cancelledAt ? 'badge badge--cancelled' : 'badge badge--active';
+    statusBadge.textContent = booking.cancelledAt ? 'СКАСОВАНО' : 'АКТИВНЕ';
+
+    row.appendChild(statusBadge);
+
+    if (!booking.cancelledAt) {
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'button button--secondary';
+      editBtn.style.cssText = 'padding: 0.4rem 0.8rem; font-size: 0.8rem; margin-left: auto;';
+      editBtn.textContent = 'РЕДАГУВАТИ';
+      editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleEditBooking(booking);
+      });
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.className = 'button button--danger';
+      cancelBtn.style.cssText = 'padding: 0.4rem 0.8rem; font-size: 0.8rem;';
+      cancelBtn.textContent = 'СКАСУВАТИ';
+      cancelBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        handleCancelBooking(booking.id);
+      });
+
+      row.appendChild(editBtn);
+      row.appendChild(cancelBtn);
+    }
+
+    item.addEventListener('click', () => {
+      handleViewBookingDetails(booking);
+    });
+
+    item.append(title, meta, row);
+    list.appendChild(item);
+  }
+}
+
+function updateBookingFormState() {
+  const submitButton = document.getElementById('booking-submit');
+  const isLoggedIn = currentUser !== null;
+
+  if (submitButton) {
+    submitButton.disabled = !isLoggedIn;
+  }
+
+  window.AppLayout?.setBookingAuthWarning(isLoggedIn);
+}
+
+function setAuthenticatedUser(user) {
+  currentUser = user;
+  window.AppLayout?.setAdminPanelVisible(user?.isAdmin || false);
+  updateBookingFormState();
+  window.AppNavbar?.render();
+}
+
+function setUnauthenticatedUser() {
+  currentUser = null;
+  window.AppLayout?.setAdminPanelVisible(false);
+  updateBookingFormState();
+  window.AppNavbar?.render();
+}
+
+async function refreshAuthState() {
+  const token = window.localStorage.getItem('meeting-room-booking-token');
+
+  if (!token) {
+    setUnauthenticatedUser();
+    return;
+  }
+
+  try {
+    const response = await fetchCurrentUser();
+
+    if (response && response.user) {
+      setAuthenticatedUser(response.user);
+      return;
+    }
+  } catch (error) {
+    console.warn('Auth refresh failed', error);
+  }
+
+  window.localStorage.removeItem('meeting-room-booking-token');
+  setUnauthenticatedUser();
+}
+
+async function handleLogin() {
+  const emailInput = document.getElementById('login-email');
+  const passwordInput = document.getElementById('login-password');
+  const loginError = document.getElementById('login-error');
+
+  if (!emailInput || !passwordInput || !loginError) {
+    return;
+  }
+
+  loginError.hidden = true;
+  loginError.textContent = '';
+
+  try {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    const data = await login({ email, password });
+
+    if (data && data.token) {
+      window.localStorage.setItem('meeting-room-booking-token', data.token);
+      setAuthenticatedUser(data.user);
+      await loadData();
+      emailInput.value = '';
+      passwordInput.value = '';
+      window.AppRouter?.navigate(window.AppRouter.ROUTES.schedule);
+    }
+  } catch (error) {
+    loginError.hidden = false;
+    loginError.textContent = getErrorMessage(error);
+  }
+}
+
+async function handleRegister() {
+  const nameInput = document.getElementById('register-name');
+  const emailInput = document.getElementById('register-email');
+  const passwordInput = document.getElementById('register-password');
+  const registerError = document.getElementById('register-error');
+
+  if (!nameInput || !emailInput || !passwordInput || !registerError) {
+    return;
+  }
+
+  registerError.hidden = true;
+  registerError.textContent = '';
+
+  try {
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    const data = await register({ name, email, password });
+
+    if (data && data.token) {
+      window.localStorage.setItem('meeting-room-booking-token', data.token);
+      setAuthenticatedUser(data.user);
+      await loadData();
+      nameInput.value = '';
+      emailInput.value = '';
+      passwordInput.value = '';
+      window.AppRouter?.navigate(window.AppRouter.ROUTES.schedule);
+    }
+  } catch (error) {
+    registerError.hidden = false;
+    registerError.textContent = getErrorMessage(error);
+  }
+}
+
+async function handleLogout() {
+  window.localStorage.removeItem('meeting-room-booking-token');
+  setUnauthenticatedUser();
+  window.AppNavbar?.closeDropdowns();
+  window.AppRouter?.navigate(window.AppRouter.ROUTES.login);
+}
+
+async function handleAdminCreateRoom() {
+  const nameInput = document.getElementById('admin-room-name');
+  const floorInput = document.getElementById('admin-room-floor');
+  const capacityInput = document.getElementById('admin-room-capacity');
+  const status = document.getElementById('admin-status');
+
+  if (!nameInput || !floorInput || !capacityInput || !status) {
+    return;
+  }
+
+  status.hidden = false;
+  status.dataset.state = 'loading';
+  status.textContent = 'Створення кімнати…';
+
+  try {
+    const name = nameInput.value.trim();
+    const floor = Number(floorInput.value);
+    const capacity = Number(capacityInput.value);
+
+    await createRoom({ name, floor, capacity });
+
+    status.dataset.state = 'success';
+    status.textContent = 'Кімнату успішно створено.';
+    nameInput.value = '';
+    floorInput.value = '1';
+    capacityInput.value = '10';
+    await loadRooms();
+  } catch (error) {
+    status.dataset.state = 'error';
+    status.textContent = getErrorMessage(error);
+  }
+}
+
+function handleBookRoomClick() {
+  if (!currentUser) {
+    window.AppRouter?.navigate(window.AppRouter.ROUTES.login);
+    return;
+  }
+
+  window.AppRouter?.navigate(window.AppRouter.ROUTES.schedule);
+  window.AppLayout?.scrollToBookingPanel();
+}
+
+function handleAddRoomClick() {
+  window.AppRouter?.navigate(window.AppRouter.ROUTES.schedule);
+  window.AppLayout?.scrollToAdminPanel();
+}
+
+function setupAuthForms() {
+  const loginSubmit = document.getElementById('login-submit');
+  const registerSubmit = document.getElementById('register-submit');
+  const adminRoomSubmit = document.getElementById('admin-room-submit');
+
+  loginSubmit?.addEventListener('click', () => handleLogin());
+  registerSubmit?.addEventListener('click', () => handleRegister());
+  adminRoomSubmit?.addEventListener('click', () => handleAdminCreateRoom());
 }
 
 function populateRoomSelect(rooms) {
@@ -221,13 +473,13 @@ function populateRoomSelect(rooms) {
 
   const placeholder = document.createElement('option');
   placeholder.value = '';
-  placeholder.textContent = rooms.length === 0 ? 'No rooms available' : 'Select a room';
+  placeholder.textContent = rooms.length === 0 ? 'Кімнати недоступні' : 'Оберіть кімнату';
   select.appendChild(placeholder);
 
   for (const room of rooms) {
     const option = document.createElement('option');
     option.value = String(room.id);
-    option.textContent = `${room.name} (Floor ${room.floor})`;
+    option.textContent = `${room.name} (Поверх ${room.floor})`;
     select.appendChild(option);
   }
 
@@ -245,12 +497,12 @@ async function refreshBookings() {
     refreshButton.disabled = true;
   }
 
-  setPanelStatus('bookings-status', 'Refreshing bookings…', 'loading');
+  setPanelStatus('bookings-status', 'Оновлення бронювань…', 'loading');
 
   try {
     const bookings = ensureArray(await fetchBookings(), 'bookings');
     renderBookings(bookings);
-    setPanelStatus('bookings-status', `${bookings.length} booking(s) loaded`, 'success');
+    setPanelStatus('bookings-status', `Завантажено бронювань: ${bookings.length}`, 'success');
   } catch (error) {
     renderBookings([]);
     setPanelStatus('bookings-status', getErrorMessage(error), 'error');
@@ -263,7 +515,7 @@ async function refreshBookings() {
 }
 
 async function loadRooms() {
-  setPanelStatus('rooms-status', 'Loading rooms…', 'loading');
+  setPanelStatus('rooms-status', 'Завантаження кімнат…', 'loading');
 
   try {
     const rooms = ensureArray(await fetchRooms(), 'rooms');
@@ -273,7 +525,7 @@ async function loadRooms() {
 
     renderRooms(rooms);
     populateRoomSelect(rooms);
-    setPanelStatus('rooms-status', `${rooms.length} room(s) available`, 'success');
+    setPanelStatus('rooms-status', `Доступно кімнат: ${rooms.length}`, 'success');
   } catch (error) {
     cachedRooms = [];
     roomNamesById = {};
@@ -285,12 +537,12 @@ async function loadRooms() {
 }
 
 async function loadBookingsList() {
-  setPanelStatus('bookings-status', 'Loading bookings…', 'loading');
+  setPanelStatus('bookings-status', 'Завантаження бронювань…', 'loading');
 
   try {
     const bookings = ensureArray(await fetchBookings(), 'bookings');
     renderBookings(bookings);
-    setPanelStatus('bookings-status', `${bookings.length} booking(s) loaded`, 'success');
+    setPanelStatus('bookings-status', `Завантажено бронювань: ${bookings.length}`, 'success');
   } catch (error) {
     renderBookings([]);
     setPanelStatus('bookings-status', getErrorMessage(error), 'error');
@@ -299,6 +551,62 @@ async function loadBookingsList() {
 
 async function loadData() {
   await Promise.all([loadRooms(), loadBookingsList()]);
+}
+
+async function loadMyBookings() {
+  const refreshButton = document.getElementById('refresh-my-bookings');
+
+  if (refreshButton) {
+    refreshButton.disabled = true;
+  }
+
+  setPanelStatus('my-bookings-status', 'Завантаження ваших бронювань…', 'loading');
+
+  try {
+    const bookings = ensureArray(await fetchMyBookings(), 'bookings');
+    renderMyBookings(bookings);
+    setPanelStatus('my-bookings-status', `Знайдено бронювань: ${bookings.length}`, 'success');
+  } catch (error) {
+    renderMyBookings([]);
+    setPanelStatus('my-bookings-status', getErrorMessage(error), 'error');
+  } finally {
+    if (refreshButton) {
+      refreshButton.disabled = false;
+    }
+  }
+}
+
+function handleViewBookingDetails(booking) {
+  if (window.BookingModals) {
+    window.BookingModals.detailsModal.show(
+      booking,
+      cachedRooms,
+      handleEditBooking,
+      (b) => handleCancelBooking(b.id)
+    );
+  }
+}
+
+function handleEditBooking(booking) {
+  if (window.BookingModals) {
+    window.BookingModals.editModal.show(booking, cachedRooms, async (updated) => {
+      await loadMyBookings();
+      if (window.AppRouter?.getCurrentRoute() === window.AppRouter?.ROUTES.schedule) {
+        await loadData();
+      }
+    });
+  }
+}
+
+function handleCancelBooking(bookingId) {
+  if (window.BookingModals) {
+    window.BookingModals.cancelModal.show(bookingId, async () => {
+      await loadMyBookings();
+      if (window.AppRouter?.getCurrentRoute() === window.AppRouter?.ROUTES.schedule) {
+        await loadData();
+      }
+    });
+  }
 }
 
 function initializeBookingFormDefaults() {
@@ -330,6 +638,20 @@ function setupRefreshButton() {
   });
 }
 
+function setupMyBookingsRefresh() {
+  const refreshButton = document.getElementById('refresh-my-bookings');
+
+  if (!refreshButton) {
+    return;
+  }
+
+  refreshButton.addEventListener('click', () => {
+    loadMyBookings().catch((error) => {
+      console.error(error);
+    });
+  });
+}
+
 function setupBookingForm() {
   const form = document.getElementById('booking-form');
 
@@ -355,17 +677,17 @@ function setupBookingForm() {
     try {
       payload = buildBookingPayload(values);
     } catch {
-      setStatus('booking-form-status', 'Please check the date and time values.', 'error');
+      setStatus('booking-form-status', 'Будь ласка, перевірте значення дати та часу.', 'error');
       return;
     }
 
     setSubmitLoading(true);
-    setStatus('booking-form-status', 'Creating booking…', 'loading');
+    setStatus('booking-form-status', 'Створення бронювання…', 'loading');
 
     try {
       await createBooking(payload);
       clearBookingFormErrors();
-      setStatus('booking-form-status', 'Booking created successfully.', 'success');
+      setStatus('booking-form-status', 'Бронювання успішно створено.', 'success');
       form.reset();
       populateRoomSelect(cachedRooms);
       initializeBookingFormDefaults();
@@ -375,7 +697,7 @@ function setupBookingForm() {
       } catch {
         setStatus(
           'booking-form-status',
-          'Booking created, but the bookings list could not be refreshed.',
+          'Бронювання створено, але список не вдалося оновити.',
           'error',
         );
       }
@@ -409,6 +731,53 @@ function setupBookingForm() {
   }
 }
 
+function handleRouteChange(route) {
+  if (route === window.AppRouter.ROUTES.schedule) {
+    loadData().catch((error) => console.error(error));
+  }
+
+  if (route === window.AppRouter.ROUTES.myBookings) {
+    loadMyBookings().catch((error) => {
+      console.error(error);
+      setPanelStatus('my-bookings-status', getErrorMessage(error), 'error');
+    });
+  }
+
+  if (route === window.AppRouter.ROUTES.calendar) {
+    loadCalendarData().catch((error) => {
+      console.error(error);
+    });
+  }
+
+  if (route === window.AppRouter.ROUTES.profile) {
+    if (window.ProfileManager && window.ProfileManager.loadUserProfile) {
+      window.ProfileManager.loadUserProfile().catch((error) => {
+        console.error(error);
+      });
+    }
+  }
+}
+
+async function loadCalendarData() {
+  try {
+    const [bookingsData, roomsData] = await Promise.all([
+      fetchBookings(),
+      fetchRooms(),
+    ]);
+
+    const bookings = ensureArray(bookingsData, 'bookings');
+    const rooms = ensureArray(roomsData, 'rooms');
+
+    if (window.CyberpunkCalendar) {
+      window.CyberpunkCalendar.updateData(bookings, rooms);
+    }
+  } catch (error) {
+    console.error('Failed to load calendar data:', error);
+  }
+}
+
+window.loadCalendarData = loadCalendarData;
+
 document.addEventListener('DOMContentLoaded', () => {
   const backendUrl = document.getElementById('backend-url');
 
@@ -416,11 +785,51 @@ document.addEventListener('DOMContentLoaded', () => {
     backendUrl.textContent = API_BASE_URL;
   }
 
+  if (window.AppRouter) {
+    window.AppRouter.start();
+    window.AppRouter.onChange(handleRouteChange);
+  }
+
+  if (window.AppNavbar) {
+    window.AppNavbar.init({
+      getUser,
+      onLogout: handleLogout,
+      onBookRoom: handleBookRoomClick,
+      onAddRoom: handleAddRoomClick,
+    });
+  }
+
+  if (window.BookingModals) {
+    window.BookingModals.init();
+  }
+
+  if (window.CyberpunkCalendar) {
+    window.CyberpunkCalendar.init();
+  }
+
   setupBookingForm();
   setupRefreshButton();
+  setupMyBookingsRefresh();
+  setupAuthForms();
   initializeBookingFormDefaults();
-  loadData().catch((error) => {
-    console.error(error);
+  updateBookingFormState();
+
+  refreshAuthState().then(() => {
+    const currentRoute = window.AppRouter?.getCurrentRoute();
+
+    if (currentRoute === window.AppRouter?.ROUTES.calendar) {
+      loadCalendarData().catch((error) => {
+        console.error(error);
+      });
+    } else if (currentRoute === window.AppRouter?.ROUTES.myBookings) {
+      loadMyBookings().catch((error) => {
+        console.error(error);
+      });
+    } else {
+      loadData().catch((error) => {
+        console.error(error);
+      });
+    }
   });
 });
 

@@ -12,6 +12,8 @@ export interface Booking {
   startTime: string;
   /** Interval end in UTC (ISO 8601); must be after startTime. */
   endTime: string;
+  /** User name of the booking creator. */
+  createdBy?: string;
   /** When the booking was created in UTC (ISO 8601). */
   createdAt: string;
   /** When the booking was cancelled, or null if still active. */

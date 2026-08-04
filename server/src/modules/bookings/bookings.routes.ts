@@ -1,10 +1,19 @@
 import { Router } from 'express';
 import {
-  BookingConflictError,
-  BookingNotFoundError,
-  BookingValidationError,
-} from '../../errors/booking.errors';
-import { createBooking, getAllBookings } from '../../services/bookings.service';
+  createBooking,
+  getAllBookings,
+  getBookingsByUser,
+  getBookingById,
+  cancelBooking,
+  updateBooking,
+} from '../../services/bookings.service';
+import { requireAuth, AuthRequest } from '../../middleware/auth';
+import {
+  validateIdParam,
+  requireAuthenticatedUser,
+  handleBookingError,
+  sendInternalError,
+} from '../../utils/route-helpers';
 
 export const bookingsRouter = Router();
 
@@ -13,8 +22,32 @@ bookingsRouter.get('/', (_req, res) => {
     const bookings = getAllBookings();
     res.json(bookings);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Failed to load bookings' });
+    sendInternalError(error, res, 'Failed to load bookings');
+  }
+});
+
+bookingsRouter.get('/my', requireAuth, (req, res) => {
+  try {
+    const user = requireAuthenticatedUser(req as AuthRequest, res);
+    if (!user) return;
+
+    const bookings = getBookingsByUser(user.userId);
+    res.json(bookings);
+  } catch (error) {
+    sendInternalError(error, res, 'Failed to load your bookings');
+  }
+});
+
+bookingsRouter.get('/:id', requireAuth, (req, res) => {
+  try {
+    const bookingId = validateIdParam(req.params.id, 'booking ID', res);
+    if (!bookingId) return;
+
+    const booking = getBookingById(bookingId);
+    res.json(booking);
+  } catch (error) {
+    if (handleBookingError(error, res)) return;
+    sendInternalError(error, res, 'Failed to load booking');
   }
 });
 
@@ -23,22 +56,45 @@ bookingsRouter.post('/', (req, res) => {
     const booking = createBooking(req.body);
     res.status(201).json(booking);
   } catch (error) {
-    if (error instanceof BookingValidationError) {
-      res.status(400).json({ message: error.message });
-      return;
-    }
+    if (handleBookingError(error, res)) return;
+    sendInternalError(error, res, 'Failed to create booking');
+  }
+});
 
-    if (error instanceof BookingNotFoundError) {
-      res.status(404).json({ message: error.message });
-      return;
-    }
+bookingsRouter.put('/:id', requireAuth, (req, res) => {
+  try {
+    const user = requireAuthenticatedUser(req as AuthRequest, res);
+    if (!user) return;
 
-    if (error instanceof BookingConflictError) {
-      res.status(409).json({ message: error.message });
-      return;
-    }
+    const bookingId = validateIdParam(req.params.id, 'booking ID', res);
+    if (!bookingId) return;
 
-    console.error(error);
-    res.status(500).json({ message: 'Failed to create booking' });
+    const payload = {
+      ...req.body,
+      userId: user.userId,
+    };
+
+    const booking = updateBooking(bookingId, user.userId, payload);
+    res.json(booking);
+  } catch (error) {
+    if (handleBookingError(error, res)) return;
+    sendInternalError(error, res, 'Failed to update booking');
+  }
+});
+
+bookingsRouter.post('/:id/cancel', requireAuth, (req, res) => {
+  try {
+    const user = requireAuthenticatedUser(req as AuthRequest, res);
+    if (!user) return;
+
+    const bookingId = validateIdParam(req.params.id, 'booking ID', res);
+    if (!bookingId) return;
+
+    const reason = req.body.reason;
+    const booking = cancelBooking(bookingId, user.userId, reason);
+    res.json(booking);
+  } catch (error) {
+    if (handleBookingError(error, res)) return;
+    sendInternalError(error, res, 'Failed to cancel booking');
   }
 });

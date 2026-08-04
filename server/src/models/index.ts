@@ -18,6 +18,17 @@ const SCHEMA_STATEMENTS = [
   CREATE_BOOKINGS_ROOM_TIME_INDEX,
 ];
 
+function ensureUserAdminColumn(): void {
+  const db = getDatabase();
+  const columns = db
+    .prepare(`PRAGMA table_info(${USER_TABLE})`)
+    .all() as Array<{ name: string }>;
+
+  if (!columns.some((column) => column.name === 'is_admin')) {
+    db.exec(`ALTER TABLE ${USER_TABLE} ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0`);
+  }
+}
+
 /** Create database tables for users, rooms, and bookings if they do not exist. */
 export function initializeSchema(): void {
   const db = getDatabase();
@@ -25,6 +36,8 @@ export function initializeSchema(): void {
   for (const statement of SCHEMA_STATEMENTS) {
     db.exec(statement);
   }
+
+  ensureUserAdminColumn();
 }
 
 export const tables = {

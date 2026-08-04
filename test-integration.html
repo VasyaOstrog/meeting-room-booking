@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Room Integration Test</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+    .log { margin: 5px 0; padding: 8px; border-left: 4px solid #555; }
+    .log.error { border-color: #f48771; background: #3a2020; }
+    .log.success { border-color: #89d185; background: #1e3a1e; }
+    .log.info { border-color: #75beff; background: #1e2838; }
+    .log.warn { border-color: #d7ba7d; background: #3a3220; }
+    pre { margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <h1>Add Room - Integration Test</h1>
+  <button onclick="testAddRoomFlow()" style="padding: 10px 20px; font-size: 16px;">Run Test</button>
+  <div id="log"></div>
+
+  <script>
+    const API_BASE_URL = 'http://localhost:3001/api';
+    const logDiv = document.getElementById('log');
+
+    function log(level, message, data) {
+      const div = document.createElement('div');
+      div.className = `log ${level}`;
+      div.innerHTML = `<strong>[${level.toUpperCase()}]</strong> ${message}`;
+      if (data) {
+        const pre = document.createElement('pre');
+        pre.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        div.appendChild(pre);
+      }
+      logDiv.appendChild(div);
+      console.log(`[${level}]`, message, data);
+    }
+
+    async function testAddRoomFlow() {
+      logDiv.innerHTML = '';
+      log('info', 'Starting Add Room integration test...');
+
+      try {
+        // Step 1: Check backend
+        log('info', 'Step 1: Checking backend health...');
+        const healthRes = await fetch(`${API_BASE_URL}/health`);
+        const health = await healthRes.json();
+
+        if (health.status !== 'ok') {
+          log('error', 'Backend is not healthy', health);
+          return;
+        }
+        log('success', 'Backend is running', health);
+
+        // Step 2: Login as admin
+        log('info', 'Step 2: Logging in as admin...');
+        const loginRes = await fetch(`${API_BASE_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: 'test@example.com',
+            password: 'admin123'
+          })
+        });
+
+        if (!loginRes.ok) {
+          const error = await loginRes.json();
+          log('error', 'Login failed', error);
+          return;
+        }
+
+        const loginData = await loginRes.json();
+        log('success', 'Login successful', {
+          userId: loginData.user.id,
+          email: loginData.user.email,
+          isAdmin: loginData.user.isAdmin
+        });
+
+        if (!loginData.user.isAdmin) {
+          log('error', 'User is not admin!');
+          return;
+        }
+
+        const token = loginData.token;
+
+        // Step 3: Get current rooms count
+        log('info', 'Step 3: Getting current rooms...');
+        const roomsBefore = await fetch(`${API_BASE_URL}/rooms`).then(r => r.json());
+        log('info', `Current rooms count: ${roomsBefore.length}`, roomsBefore);
+
+        // Step 4: Create new room
+        log('info', 'Step 4: Creating new room...');
+        const timestamp = Date.now();
+        const newRoomData = {
+          name: `Integration Test Room ${timestamp}`,
+          floor: 10,
+          capacity: 25
+        };
+
+        log('info', 'Sending POST request...', newRoomData);
+
+        const createRes = await fetch(`${API_BASE_URL}/rooms`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(newRoomData)
+        });
+
+        log('info', `Response status: ${createRes.status}`);
+
+        if (!createRes.ok) {
+          const error = await createRes.json();
+          log('error', 'Room creation failed', error);
+          return;
+        }
+
+        const createdRoom = await createRes.json();
+        log('success', 'Room created successfully!', createdRoom);
+
+        // Step 5: Verify room in list
+        log('info', 'Step 5: Verifying room appears in list...');
+        const roomsAfter = await fetch(`${API_BASE_URL}/rooms`).then(r => r.json());
+        const foundRoom = roomsAfter.find(r => r.id === createdRoom.id);
+
+        if (!foundRoom) {
+          log('error', 'Room NOT found in list!', { roomsAfter });
+          return;
+        }
+
+        log('success', 'Room verified in list!', {
+          roomsBefore: roomsBefore.length,
+          roomsAfter: roomsAfter.length,
+          newRoom: foundRoom
+        });
+
+        // Final summary
+        log('success', '🎉 ALL TESTS PASSED - Backend works perfectly!');
+        log('warn', 'NEXT STEP: Test frontend button click in the actual app');
+        log('info', 'Open http://localhost:5500 and:', [
+          '1. Login with: test@example.com / admin123',
+          '2. Check if Admin panel appears',
+          '3. Fill form: name="Test", floor=1, capacity=10',
+          '4. Click "Create room" button',
+          '5. Check browser console for errors'
+        ]);
+
+      } catch (error) {
+        log('error', 'Test failed with exception', {
+          message: error.message,
+          stack: error.stack
+        });
+      }
+    }
+  </script>
+</body>
+</html>

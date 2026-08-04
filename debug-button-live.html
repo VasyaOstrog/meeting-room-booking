@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Room Button Debug</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #000;
+      color: #0f0;
+    }
+    .step {
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #0f0;
+    }
+    .error { color: #f00; border-color: #f00; }
+    .success { color: #0f0; border-color: #0f0; }
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      background: #0f0;
+      color: #000;
+      border: none;
+      cursor: pointer;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Add Room Button - Live Debug</h1>
+  <button onclick="debugButton()">▶ Run Debug Test</button>
+  <div id="output"></div>
+
+  <script>
+    const output = document.getElementById('output');
+
+    function log(message, isError = false) {
+      const div = document.createElement('div');
+      div.className = `step ${isError ? 'error' : 'success'}`;
+      div.textContent = message;
+      output.appendChild(div);
+      console.log(message);
+    }
+
+    function debugButton() {
+      output.innerHTML = '';
+      log('🔍 Starting debug...');
+
+      // Open the app in iframe for inspection
+      const iframe = document.createElement('iframe');
+      iframe.src = 'http://localhost:5500';
+      iframe.style.width = '1px';
+      iframe.style.height = '1px';
+      iframe.style.opacity = '0';
+      document.body.appendChild(iframe);
+
+      iframe.onload = function() {
+        try {
+          const doc = iframe.contentDocument || iframe.contentWindow.document;
+
+          log('✓ App loaded in iframe');
+
+          // Check if button exists
+          const button = doc.getElementById('admin-room-submit');
+          log(button ? '✓ Button EXISTS in DOM' : '✗ Button NOT FOUND', !button);
+
+          if (button) {
+            log(`  - Button text: "${button.textContent}"`);
+            log(`  - Button type: ${button.type}`);
+            log(`  - Button disabled: ${button.disabled}`);
+
+            // Check if parent is hidden
+            const panel = doc.getElementById('admin-panel');
+            if (panel) {
+              const isHidden = panel.classList.contains('hidden');
+              log(`  - Admin panel hidden: ${isHidden}`, isHidden);
+
+              if (isHidden) {
+                log('⚠️ PROBLEM: Admin panel is HIDDEN by default!', true);
+                log('   User must login first to see the button', true);
+              }
+            }
+
+            // Try to click it
+            log('🖱️ Attempting to click button...');
+            button.click();
+            log('✓ Click triggered (check main app console for errors)');
+          }
+
+          // Check if handler exists
+          const win = iframe.contentWindow;
+          if (win.handleAdminCreateRoom) {
+            log('✓ Handler function is globally accessible');
+          } else {
+            log('⚠️ Handler function NOT in global scope (this is OK if using closure)');
+          }
+
+          log('\n📋 NEXT STEPS:');
+          log('1. Open http://localhost:5500 in main window');
+          log('2. Open DevTools Console (F12)');
+          log('3. Login as: test@example.com / admin123');
+          log('4. Check if admin panel appears');
+          log('5. Try clicking "Create room" button');
+          log('6. Watch console for errors');
+
+        } catch (error) {
+          log(`✗ Error: ${error.message}`, true);
+          log('  (This might be CORS - open main app directly)', true);
+        }
+      };
+    }
+
+    // Auto-run on load
+    setTimeout(debugButton, 500);
+  </script>
+</body>
+</html>

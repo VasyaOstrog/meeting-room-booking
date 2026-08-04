@@ -77,21 +77,11 @@ function validateTimeField(value, fieldName, { minMinutes, maxMinutes }) {
   return null;
 }
 
-/**
- * Validate booking form values before sending to the API.
- * Returns field-specific errors with user-friendly messages.
- */
 function validateBookingForm(values) {
   const errors = {};
 
   if (!values.roomId) {
     addError(errors, 'roomId', 'Please select a room.');
-  }
-
-  if (!values.userId) {
-    addError(errors, 'userId', 'Please enter a user ID.');
-  } else if (!Number.isInteger(values.userId) || values.userId <= 0) {
-    addError(errors, 'userId', 'User ID must be a positive whole number.');
   }
 
   if (!values.title) {
@@ -167,7 +157,6 @@ function combineDateAndTimeToIso(dateValue, timeValue) {
 function buildBookingPayload(values) {
   return {
     roomId: values.roomId,
-    userId: values.userId,
     title: values.title,
     startTime: combineDateAndTimeToIso(values.date, values.startTime),
     endTime: combineDateAndTimeToIso(values.date, values.endTime),
@@ -177,11 +166,9 @@ function buildBookingPayload(values) {
 function readBookingFormValues(form) {
   const formData = new FormData(form);
   const roomId = Number(formData.get('roomId'));
-  const userId = Number(formData.get('userId'));
 
   return {
     roomId: Number.isInteger(roomId) && roomId > 0 ? roomId : 0,
-    userId: Number.isInteger(userId) && userId > 0 ? userId : 0,
     title: String(formData.get('title') ?? '').trim(),
     date: String(formData.get('date') ?? '').trim(),
     startTime: String(formData.get('startTime') ?? '').trim(),

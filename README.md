@@ -1,117 +1,155 @@
-# Meeting Room Booking
+# Meeting Room Booking System
 
-A web application for booking meeting rooms in an office. Employees can view available rooms, see current bookings, and reserve time slots through a simple web interface.
+Веб-застосунок для бронювання переговорних кімнат в офісі. Співробітники можуть переглядати доступні кімнати, бачити поточні бронювання та резервувати часові слоти через простий веб-інтерфейс з сучасним кіберпанк-дизайном.
 
-## Features
+## 🚀 Основні можливості
 
-### Implemented
+### ✅ Реалізовано
 
-- **Rooms** — list meeting rooms with name, floor, and capacity
-- **Bookings** — view all bookings with title, room, time range, and status
-- **Create booking** — web form with client-side and server-side validation
-- **Booking rules**
-  - Office hours: 09:00–19:00 (Europe/Kyiv)
-  - 30-minute time slots; duration from 30 minutes to 4 hours
-  - Future bookings only; no overlapping reservations (adjacent slots allowed)
-  - Title length: 1–100 characters
-- **Error handling** — clear API and UI feedback for validation, conflicts, and network errors
-- **Health check** — `GET /api/health` reports API and database status
-- **Tests** — booking validation logic and API endpoint tests
+- **🔐 Автентифікація користувачів**
+  - Реєстрація нових користувачів
+  - Вхід в систему з email та паролем
+  - JWT-токени для захищених сесій
+  - Профіль користувача з можливістю оновлення
 
-### Planned
+- **🏢 Управління кімнатами**
+  - Перегляд списку переговорних кімнат
+  - Інформація про назву, поверх та місткість
+  - Адмін-панель для додавання нових кімнат
+  - Скрипти для управління адміністраторами
 
-- User registration, login, and session management
-- Weekly schedule grid (Google Calendar style)
-- Cancel own bookings
-- Seed 5–6 meeting rooms on startup
-- Timezone display for users outside office time
+- **📅 Система бронювання**
+  - Створення бронювань з валідацією
+  - Перегляд всіх бронювань у календарі (місяць/тиждень/день)
+  - Редагування власних бронювань
+  - Скасування бронювань з можливістю вказати причину
+  - "Мої бронювання" - особиста сторінка з історією
 
-## Tech Stack
+- **📋 Правила бронювання**
+  - Робочі години: 09:00–19:00 (Europe/Kyiv)
+  - 30-хвилинні часові слоти
+  - Тривалість: від 30 хвилин до 4 годин
+  - Тільки майбутні бронювання
+  - Перевірка на конфлікти (суміжні слоти дозволені)
+  - Довжина назви: 1–100 символів
 
-| Layer    | Technology                          |
-| -------- | ----------------------------------- |
-| Frontend | HTML, CSS, vanilla JavaScript       |
-| Backend  | Node.js, Express, TypeScript        |
-| Database | SQLite (`better-sqlite3`)           |
-| Tests    | Node.js test runner, Supertest      |
+- **🎨 Інтерфейс користувача**
+  - Кіберпанк-дизайн з неоновим підсвічуванням
+  - Адаптивна навігація з мобільним меню
+  - Модальні вікна для деталей, редагування та скасування
+  - Календарний вигляд з різними режимами перегляду
+  - Реал-тайм оновлення статусу бронювань
 
-## Prerequisites
+- **⚡ Технічні можливості**
+  - Обробка помилок з чіткими повідомленнями
+  - Валідація на клієнті та сервері
+  - Health check endpoint (`/api/health`)
+  - Автоматичне створення БД та таблиць
+  - CORS підтримка для розробки
 
-- [Node.js](https://nodejs.org/) 22 or newer (required by `better-sqlite3`)
-- npm (included with Node.js)
+## 🛠 Технології
 
-## Installation
+| Рівень   | Технології                              |
+| -------- | --------------------------------------- |
+| Frontend | HTML5, CSS3, Vanilla JavaScript (ES6+)  |
+| Backend  | Node.js, Express, TypeScript            |
+| База даних | SQLite (`better-sqlite3`)             |
+| Автентифікація | JWT, bcrypt                       |
+| Тести    | Node.js test runner, Supertest          |
 
-1. Clone the repository:
+## 📋 Вимоги
 
-   ```bash
-   git clone <repository-url>
-   cd meeting-room-booking
-   ```
+- [Node.js](https://nodejs.org/) 18.0 або новіше
+- npm (включено з Node.js)
 
-2. Install backend dependencies:
+## 📦 Встановлення
 
-   ```bash
-   cd server
-   npm install
-   ```
+### 1. Клонувати репозиторій
 
-3. Create a local environment file:
+```bash
+git clone https://github.com/YOUR_USERNAME/meeting-room-booking.git
+cd meeting-room-booking
+```
 
-   ```bash
-   cp .env.example .env
-   ```
+### 2. Встановити залежності бекенду
 
-   Default values in `.env.example`:
+```bash
+cd server
+npm install
+```
 
-   ```env
-   PORT=3001
-   NODE_ENV=development
-   DATABASE_PATH=./data/meeting-room-booking.sqlite
-   ```
+### 3. Налаштувати змінні середовища
 
-4. Build the server (optional for development — `npm run dev` uses `tsx` directly):
+```bash
+cp .env.example .env
+```
 
-   ```bash
-   npm run build
-   ```
+Відредагуйте `.env` файл (за замовчуванням значення вже встановлені):
 
-## How to Run
+```env
+PORT=3001
+NODE_ENV=development
+DATABASE_PATH=./data/meeting-room-booking.sqlite
+JWT_SECRET=your-secret-key-change-in-production
+```
 
-### 1. Start the backend
+⚠️ **Важливо:** Змініть `JWT_SECRET` на випадкову строку в production!
 
-From the `server` directory:
+### 4. Зібрати проєкт (опціонально)
+
+```bash
+npm run build
+```
+
+## 🚀 Запуск проєкту
+
+### 1. Запустити бекенд
+
+З директорії `server`:
 
 ```bash
 npm run dev
 ```
 
-Or, after building:
+Або після збірки:
 
 ```bash
 npm start
 ```
 
-The API will be available at **http://localhost:3001/api**.
+API буде доступне за адресою **http://localhost:3001/api**
 
-### 2. Start the frontend
+### 2. Запустити фронтенд
 
-The client is a static site. Serve the `client` folder with any static file server.
+Клієнтська частина - це статичний сайт. Підніміть `client` папку з будь-яким статичним сервером.
 
-Using `npx serve`:
+Використовуючи `npx serve`:
 
 ```bash
 cd client
 npx serve -l 5500
 ```
 
-Then open **http://localhost:5500** in your browser.
+Або використовуючи Live Server у VS Code.
 
-> **Note:** The frontend expects the API at `http://localhost:3001/api` (see `client/js/config.js`). Change `API_BASE_URL` if your backend runs on a different host or port.
+Відкрийте **http://localhost:5500** у браузері.
 
-### 3. Add sample data (optional)
+> **Примітка:** Фронтенд очікує API за адресою `http://localhost:3001/api` (див. `client/js/config.js`). Змініть `API_BASE_URL` якщо ваш бекенд працює на іншому хості або порті.
 
-The database is created automatically on first run. To use the booking form, add at least one room and user. Example using the SQLite CLI:
+### 3. Створити першого адміністратора
+
+Після першого запуску створіть адмін-користувача:
+
+```bash
+cd server
+node make-admin.js
+```
+
+Введіть email та пароль адміністратора.
+
+### 4. Додати тестові кімнати (опціонально)
+
+Увійдіть як адміністратор та використовуйте кнопку "Додати кімнату" в інтерфейсі, або через SQLite:
 
 ```bash
 cd server
@@ -119,64 +157,188 @@ sqlite3 data/meeting-room-booking.sqlite
 ```
 
 ```sql
-INSERT INTO rooms (name, floor, capacity) VALUES ('Conference A', 1, 8);
-INSERT INTO users (name, email, password_hash) VALUES ('Demo User', 'demo@example.com', 'placeholder');
+INSERT INTO rooms (name, floor, capacity) VALUES 
+  ('Конференц-зал A', 1, 8),
+  ('Кабінет B', 2, 4),
+  ('Велика зала', 3, 20);
 ```
 
-## API Endpoints
+## 📡 API Endpoints
 
-| Method | Path            | Description              |
-| ------ | --------------- | ------------------------ |
-| GET    | `/api/health`   | Service and DB status    |
-| GET    | `/api/rooms`    | List all rooms           |
-| GET    | `/api/bookings` | List all bookings        |
-| POST   | `/api/bookings` | Create a booking         |
+### Автентифікація
 
-**POST /api/bookings** body:
+| Метод | Шлях                  | Опис                    |
+| ----- | --------------------- | ----------------------- |
+| POST  | `/api/auth/register`  | Реєстрація користувача  |
+| POST  | `/api/auth/login`     | Вхід в систему          |
+| GET   | `/api/auth/me`        | Поточний користувач     |
+
+### Кімнати
+
+| Метод | Шлях           | Опис                    | Доступ |
+| ----- | -------------- | ----------------------- | ------ |
+| GET   | `/api/rooms`   | Список всіх кімнат      | Всі    |
+| POST  | `/api/rooms`   | Створити кімнату        | Адмін  |
+
+### Бронювання
+
+| Метод | Шлях                           | Опис                      | Доступ       |
+| ----- | ------------------------------ | ------------------------- | ------------ |
+| GET   | `/api/bookings`                | Всі бронювання            | Авторизовані |
+| GET   | `/api/bookings/my`             | Мої бронювання            | Авторизовані |
+| GET   | `/api/bookings/:id`            | Деталі бронювання         | Авторизовані |
+| POST  | `/api/bookings`                | Створити бронювання       | Авторизовані |
+| PUT   | `/api/bookings/:id`            | Оновити бронювання        | Власник      |
+| POST  | `/api/bookings/:id/cancel`     | Скасувати бронювання      | Власник      |
+
+### Профіль
+
+| Метод | Шлях              | Опис                    | Доступ       |
+| ----- | ----------------- | ----------------------- | ------------ |
+| GET   | `/api/profile`    | Профіль користувача     | Авторизовані |
+| PUT   | `/api/profile`    | Оновити профіль         | Авторизовані |
+
+### Сервіс
+
+| Метод | Шлях           | Опис                    |
+| ----- | -------------- | ----------------------- |
+| GET   | `/api/health`  | Статус сервісу та БД    |
+
+### Приклад створення бронювання
 
 ```json
+POST /api/bookings
+Authorization: Bearer <your-jwt-token>
+
 {
   "roomId": 1,
-  "userId": 1,
-  "title": "Team standup",
-  "startTime": "2030-06-15T06:00:00.000Z",
-  "endTime": "2030-06-15T06:30:00.000Z"
+  "title": "Командний stand-up",
+  "startTime": "2026-08-05T06:00:00.000Z",
+  "endTime": "2026-08-05T06:30:00.000Z"
 }
 ```
 
-Times are stored in UTC (ISO 8601). Validations use office timezone (Europe/Kyiv).
+Час зберігається у UTC (ISO 8601). Валідація використовує часовий пояс офісу (Europe/Kyiv).
 
-## Running Tests
+## 🧪 Запуск тестів
 
-From the `server` directory:
+З директорії `server`:
 
 ```bash
 npm test
 ```
 
-Tests cover booking validation (overlap logic, input rules) and API endpoints (CRUD flows, error responses).
+Тести покривають:
+- Логіку валідації бронювань
+- API endpoints (CRUD операції)
+- Обробку помилок
+- Конфлікти бронювань
 
-## Project Structure
+## 🗂 Структура проєкту
 
 ```
 meeting-room-booking/
-├── client/                 # Static frontend
-│   ├── css/                # Styles
-│   ├── js/                 # API client, validation, app logic
+├── client/                     # Статичний фронтенд
+│   ├── css/
+│   │   └── production.css      # Кіберпанк стилі
+│   ├── js/
+│   │   ├── api.js              # API клієнт
+│   │   ├── app.js              # Головний застосунок
+│   │   ├── calendar.js         # Календарний вигляд
+│   │   ├── config.js           # Конфігурація
+│   │   ├── errors.js           # Обробка помилок
+│   │   ├── layout.js           # Утиліти лейауту
+│   │   ├── modals.js           # Модальні вікна
+│   │   ├── navbar.js           # Навігація
+│   │   ├── profile.js          # Профіль користувача
+│   │   ├── router.js           # Клієнтський роутер
+│   │   └── booking-validation.js # Валідація
 │   └── index.html
-├── server/                 # Express backend
+├── server/                     # Express бекенд
 │   ├── src/
-│   │   ├── config/         # Environment and database
-│   │   ├── errors/         # Custom error types
-│   │   ├── middleware/     # Express middleware
-│   │   ├── models/         # Data models and schema
-│   │   ├── modules/        # Route handlers
-│   │   ├── services/       # Business logic
-│   │   └── utils/          # Validation helpers
-│   └── tests/              # API and unit tests
+│   │   ├── config/             # Конфігурація та БД
+│   │   ├── errors/             # Власні типи помилок
+│   │   ├── middleware/         # Express middleware
+│   │   │   └── auth.ts         # JWT автентифікація
+│   │   ├── models/             # Моделі даних та схема
+│   │   │   ├── booking.model.ts
+│   │   │   ├── room.model.ts
+│   │   │   └── user.model.ts
+│   │   ├── modules/            # Обробники маршрутів
+│   │   │   ├── auth/           # Автентифікація
+│   │   │   ├── bookings/       # Бронювання
+│   │   │   ├── profile/        # Профіль
+│   │   │   └── rooms/          # Кімнати
+│   │   ├── services/           # Бізнес-логіка
+│   │   │   ├── bookings.service.ts
+│   │   │   ├── rooms.service.ts
+│   │   │   └── users.service.ts
+│   │   └── utils/              # Утиліти
+│   │       ├── auth.ts         # JWT та bcrypt
+│   │       └── route-helpers.ts
+│   ├── tests/                  # Тести
+│   ├── check-db.js             # Перевірка БД
+│   ├── make-admin.js           # Створити адміна
+│   └── reset-admin-password.js # Скинути пароль
 └── README.md
 ```
 
-## License
+## 🔧 Утилітні скрипти
 
-Private project for UA-Skills event2 competition.
+### Створити адміністратора
+
+```bash
+cd server
+node make-admin.js
+```
+
+### Скинути пароль адміністратора
+
+```bash
+cd server
+node reset-admin-password.js
+```
+
+### Перевірити структуру бази даних
+
+```bash
+cd server
+node check-db.js
+```
+
+## 🎨 Особливості UI
+
+- **Кіберпанк тема** - темний дизайн з неоновими акцентами (cyan, blue, purple)
+- **Адаптивний дизайн** - працює на мобільних, планшетах та десктопах
+- **Мобільне меню** - гамбургер-меню для маленьких екранів
+- **Анімації** - плавні переходи та наведення
+- **Календар** - три режими: місяць, тиждень, день
+- **Модальні вікна** - для деталей, редагування та скасування
+- **Українська локалізація** - повністю українською мовою
+
+## 🔐 Безпека
+
+- JWT токени для автентифікації
+- Bcrypt для хешування паролів
+- CORS налаштування
+- SQL injection захист через параметризовані запити
+- Валідація на клієнті та сервері
+
+## 🐛 Відомі обмеження
+
+- Немає відновлення паролю (тільки через скрипт)
+- Немає email верифікації
+- Одночасне редагування не блокується
+- Немає сповіщень про конфлікти в реальному часі
+
+## 📝 Ліцензія
+
+Приватний проєкт для конкурсу UA-Skills event2.
+
+## 👥 Автори
+
+Розроблено з використанням Claude Code.
+
+---
+
+**Дата оновлення:** Серпень 2026

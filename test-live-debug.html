@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Room Live Test</title>
+  <style>
+    body { font-family: monospace; padding: 20px; max-width: 900px; margin: 0 auto; }
+    .test { margin: 15px 0; padding: 15px; border: 2px solid #ddd; border-radius: 8px; }
+    .pass { border-color: #28a745; background: #d4edda; }
+    .fail { border-color: #dc3545; background: #f8d7da; }
+    .info { border-color: #007bff; background: #d1ecf1; }
+    h2 { margin: 0 0 10px; }
+    pre { background: #f8f9fa; padding: 10px; overflow-x: auto; font-size: 12px; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Add Room Button - Live Debugging</h1>
+  <button onclick="runFullTest()">▶ Run Complete Test</button>
+  <div id="results"></div>
+
+  <script>
+    const API_URL = 'http://localhost:3001/api';
+    const results = document.getElementById('results');
+
+    function log(title, status, data = null) {
+      const div = document.createElement('div');
+      div.className = `test ${status}`;
+      div.innerHTML = `<h2>${status === 'pass' ? '✅' : status === 'fail' ? '❌' : 'ℹ️'} ${title}</h2>`;
+      if (data) div.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+      results.appendChild(div);
+    }
+
+    async function runFullTest() {
+      results.innerHTML = '<h2>Running tests...</h2>';
+
+      try {
+        // TEST 1: Backend is running
+        log('TEST 1: Check backend server', 'info');
+        const health = await fetch(`${API_URL}/health`).then(r => r.json());
+        log('Backend server is running', 'pass', health);
+
+        // TEST 2: Login as admin
+        log('TEST 2: Login as admin', 'info');
+        const loginRes = await fetch(`${API_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'test@example.com', password: 'admin123' })
+        });
+
+        if (!loginRes.ok) {
+          const error = await loginRes.json();
+          log('Login failed', 'fail', error);
+          return;
+        }
+
+        const { token, user } = await loginRes.json();
+        log('Login successful', 'pass', { user, tokenLength: token.length });
+
+        if (!user.isAdmin) {
+          log('User is NOT admin', 'fail', user);
+          return;
+        }
+        log('User has admin privileges', 'pass');
+
+        // TEST 3: Create room via API
+        log('TEST 3: Create room via API', 'info');
+        const roomName = `Test Room ${Date.now()}`;
+        const createRes = await fetch(`${API_URL}/rooms`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ name: roomName, floor: 5, capacity: 20 })
+        });
+
+        if (!createRes.ok) {
+          const error = await createRes.json();
+          log('Room creation failed', 'fail', error);
+          return;
+        }
+
+        const newRoom = await createRes.json();
+        log('Room created successfully via API', 'pass', newRoom);
+
+        // TEST 4: Verify room appears in list
+        log('TEST 4: Verify room in list', 'info');
+        const rooms = await fetch(`${API_URL}/rooms`).then(r => r.json());
+        const found = rooms.find(r => r.id === newRoom.id);
+
+        if (!found) {
+          log('Room NOT found in list', 'fail', { rooms });
+          return;
+        }
+        log('Room appears in list', 'pass', { totalRooms: rooms.length, newRoom: found });
+
+        // TEST 5: Check frontend app state
+        log('TEST 5: Check frontend state', 'info');
+
+        // Open the main app in a new window for manual testing
+        const appWindow = window.open('http://localhost:5500', '_blank');
+
+        log('Frontend check instructions', 'info', {
+          message: 'New window opened. Please check:',
+          steps: [
+            '1. Admin panel should be HIDDEN (user not logged in)',
+            '2. Login with test@example.com / admin123',
+            '3. Admin panel should APPEAR after login',
+            '4. Fill the form and click "Create room"',
+            '5. Check browser console for errors'
+          ]
+        });
+
+        log('🎉 All API tests passed!', 'pass', {
+          summary: 'Backend works perfectly. Check frontend manually.',
+          credentials: { email: 'test@example.com', password: 'admin123' }
+        });
+
+      } catch (error) {
+        log('Test failed with exception', 'fail', {
+          error: error.message,
+          stack: error.stack
+        });
+      }
+    }
+  </script>
+</body>
+</html>
