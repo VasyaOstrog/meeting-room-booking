@@ -4,47 +4,25 @@ A web application for booking meeting rooms in an office. Employees can view roo
 
 ## Purpose
 
-This project implements a small office meeting-room booking system where staff can:
-
-- Register and sign in with persistent sessions
-- Browse 5–6 seeded meeting rooms with weekly schedule grids (30-minute slots)
-- Create bookings within office hours (09:00–19:00, Europe/Kyiv)
-- Cancel only their own bookings
-- View times in their local timezone while validations run against office time
+This project implements a small office meeting room booking system where staff can register and sign in with persistent sessions, browse 5 to 6 seeded meeting rooms with weekly schedule grids showing 30-minute slots, create bookings within office hours from 9am to 7pm Kyiv time, cancel only their own bookings, and view times in their local timezone while validations run against office time.
 
 ## Planned Features
 
 ### Authentication
 
-- Registration with name, email, and password
-- Login and logout with session persistence across page reloads
-- Server-side validation (unique email, name required, password 8–72 characters)
+Registration requires name, email, and password. Login and logout maintain session persistence across page reloads. Server-side validation enforces unique email addresses, required names, and passwords between 8 and 72 characters.
 
-### Rooms & Schedule
+### Rooms and Schedule
 
-- 5–6 meeting rooms seeded with name, floor, and capacity
-- Weekly schedule grid (days horizontal, time vertical) inspired by Google Calendar
-- Navigate between weeks; highlight current day and time
-- Display booking title and author on occupied slots
-- User timezone display with office timezone indicator when different
+The system includes 5 to 6 meeting rooms seeded with name, floor, and capacity. The weekly schedule grid displays days horizontally and time vertically, inspired by Google Calendar. Users can navigate between weeks with the current day and time highlighted. Occupied slots display the booking title and author name. The interface shows user timezone with an office timezone indicator when they differ.
 
 ### Bookings
 
-- Create bookings: room, date, start/end time, title (1–100 characters)
-- 30-minute slot alignment; duration 30 minutes to 4 hours
-- Future bookings only, within office hours, no overlaps (adjacent slots allowed)
-- Cancel own bookings with confirmation
-- "My bookings" page with upcoming and past sections
+Creating a booking requires selecting a room, date, start and end time, and a title between 1 and 100 characters. Bookings align to 30-minute slots with durations from 30 minutes to 4 hours. Only future bookings are allowed, must fall within office hours, and cannot overlap with existing bookings, though adjacent slots are permitted. Users can cancel their own bookings with confirmation. A dedicated page shows bookings organized into upcoming and past sections.
 
 ### Technical Stack
 
-- **Language:** TypeScript
-- **Frontend:** React or Next.js
-- **Backend:** NestJS, Express, or Next.js API routes
-- **Database:** PostgreSQL, MySQL, or SQLite
-- **Time storage:** UTC; custom schedule grid (no third-party calendar components)
-- **Security:** Hashed passwords (bcrypt or argon2)
-- **Testing:** Unit tests for booking interval overlap logic
+The application uses TypeScript throughout. The frontend is built with React or Next.js. The backend runs on NestJS, Express, or Next.js API routes. Data is stored in PostgreSQL, MySQL, or SQLite. All times are stored in UTC with a custom schedule grid implementation without third-party calendar components. Passwords are hashed using bcrypt or argon2. Unit tests cover booking interval overlap logic.
 
 ## Project Structure
 
