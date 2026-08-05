@@ -34,6 +34,17 @@
   --transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 
+  --color-void: #0a0a0f;
+  --color-surface: #12121a;
+  --color-surface-elevated: #1a1a25;
+  --text-primary: #e0e0e8;
+  --text-secondary: #9090a0;
+  --color-text-secondary: #9090a0;
+  --color-border: #2a2a35;
+  --color-error: #ff0055;
+  --color-success: #00ff88;
+  --nav-height: 64px;
+}
 
 body {
   font-family: 'Rajdhani', 'Orbitron', 'Inter', -apple-system, sans-serif;
